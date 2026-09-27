@@ -1,0 +1,243 @@
+{
+  "generated": "2026-09-27T16:06:59",
+  "paper_baseline": {
+    "clip_p10": 0.473,
+    "clip_rr": 0.2,
+    "blip2_p10": 0.498,
+    "blip2_rr": 0.166
+  },
+  "rows": [
+    {
+      "label": "PQPP paper (Long-CLIP)",
+      "run": "PAPER",
+      "test_language": null,
+      "cells": {
+        "clip_p10": 0.473,
+        "clip_rr": 0.2,
+        "blip2_p10": 0.498,
+        "blip2_rr": 0.166
+      }
+    },
+    {
+      "label": "control Long-CLIP, agregare a",
+      "run": "retrieval__english",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.4369675692782344,
+        "clip_rr": 0.13922002302632633,
+        "blip2_p10": 0.49211278237251016,
+        "blip2_rr": 0.10549981822853917
+      }
+    },
+    {
+      "label": "control Long-CLIP, agregare b",
+      "run": "retrieval__english__b",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.5593068760256816,
+        "clip_rr": 0.2236048413482552,
+        "blip2_p10": 0.6126164283022979,
+        "blip2_rr": 0.2034934210531046
+      }
+    },
+    {
+      "label": "XLM-R, concat, agregare a",
+      "run": "retrieval__english",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.3755270665926519,
+        "clip_rr": 0.07147564905288893,
+        "blip2_p10": 0.4393676407643437,
+        "blip2_rr": 0.02598146813284313
+      }
+    },
+    {
+      "label": "XLM-R, concat, agregare b",
+      "run": "retrieval__english__b",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.47151025586107226,
+        "clip_rr": 0.13694836026767837,
+        "blip2_p10": 0.5311643165390018,
+        "blip2_rr": 0.10155686931564621
+      }
+    },
+    {
+      "label": "interactiune, EN → EN",
+      "run": "retrieval__english__b__inter",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.509177477085794,
+        "clip_rr": 0.2540550598628603,
+        "blip2_p10": 0.567200824894053,
+        "blip2_rr": 0.20431110726343654
+      }
+    },
+    {
+      "label": "interactiune, EN → RO",
+      "run": "retrieval__english__b__inter",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4496407535722954,
+        "clip_rr": 0.23255343560838393,
+        "blip2_p10": 0.4918465281678233,
+        "blip2_rr": 0.18758757219758315
+      }
+    },
+    {
+      "label": "interactiune, RO → RO",
+      "run": "retrieval__romanian_reviewed__b__inter",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.468077383936281,
+        "clip_rr": 0.2135147673901547,
+        "blip2_p10": 0.5193502404683119,
+        "blip2_rr": 0.1622207034155785
+      }
+    },
+    {
+      "label": "inter + turn text, EN → EN",
+      "run": "retrieval__english__b__inter__tt",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.5769165394641235,
+        "clip_rr": 0.3431086816804495,
+        "blip2_p10": 0.6298001227993959,
+        "blip2_rr": 0.3068373281792589
+      }
+    },
+    {
+      "label": "inter + turn text, EN → RO",
+      "run": "retrieval__english__b__inter__tt",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.463850012516233,
+        "clip_rr": 0.2814028876194242,
+        "blip2_p10": 0.4770059322945318,
+        "blip2_rr": 0.24069001133591716
+      }
+    },
+    {
+      "label": "inter + turn text, RO → RO (secv.)",
+      "run": "retrieval__romanian_reviewed__b__inter__tt__seq",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.523135090102459,
+        "clip_rr": 0.2545742145709755,
+        "blip2_p10": 0.57897219779613,
+        "blip2_rr": 0.20648781602207622
+      }
+    },
+    {
+      "label": "augm EN+RO → EN",
+      "run": "retrieval__english+romanian_reviewed__b__inter",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.4995399082541719,
+        "clip_rr": 0.24784836544418204,
+        "blip2_p10": 0.5597312245365156,
+        "blip2_rr": 0.20385829243331582
+      }
+    },
+    {
+      "label": "augm EN+RO → RO",
+      "run": "retrieval__english+romanian_reviewed__b__inter",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.47652717922093896,
+        "clip_rr": 0.22351006290509012,
+        "blip2_p10": 0.5274531257755576,
+        "blip2_rr": 0.19132634097492246
+      }
+    },
+    {
+      "label": "augm EN+ambele → EN",
+      "run": "retrieval__english+romanian+romanian_reviewed__b__inter",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.4944988473045861,
+        "clip_rr": 0.25067861381596823,
+        "blip2_p10": 0.5533293894974883,
+        "blip2_rr": 0.19590582299284404
+      }
+    },
+    {
+      "label": "augm EN+ambele → RO",
+      "run": "retrieval__english+romanian+romanian_reviewed__b__inter",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.47992926248119827,
+        "clip_rr": 0.22650690610422938,
+        "blip2_p10": 0.5315798748811433,
+        "blip2_rr": 0.18398714653762485
+      }
+    },
+    {
+      "label": "augm EN+RO + consistenta → RO",
+      "run": "retrieval__english+romanian_reviewed__b__inter__cons0.5",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4788699525615959,
+        "clip_rr": 0.22174454880863145,
+        "blip2_p10": 0.5278195455973281,
+        "blip2_rr": 0.18316474802428426
+      }
+    },
+    {
+      "label": "secv. RO → RO",
+      "run": "retrieval__romanian_reviewed__b__inter__seq",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4672128214521545,
+        "clip_rr": 0.23296818246551237,
+        "blip2_p10": 0.5119053473627455,
+        "blip2_rr": 0.19916551196759394
+      }
+    },
+    {
+      "label": "secv. + augm EN+RO → RO",
+      "run": "retrieval__english+romanian_reviewed__b__inter__seq",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4611657914703663,
+        "clip_rr": 0.2382705018083192,
+        "blip2_p10": 0.5073411553258009,
+        "blip2_rr": 0.2013921531209099
+      }
+    },
+    {
+      "label": "secv. + augm ambele → RO",
+      "run": "retrieval__english+romanian+romanian_reviewed__b__inter__seq",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4645401586837188,
+        "clip_rr": 0.23488239552211954,
+        "blip2_p10": 0.5078555907025999,
+        "blip2_rr": 0.19445327422754555
+      }
+    },
+    {
+      "label": "secv. + augm + turn text → EN",
+      "run": "retrieval__english+romanian_reviewed__b__inter__tt__seq",
+      "test_language": "english",
+      "cells": {
+        "clip_p10": 0.5652819290030443,
+        "clip_rr": 0.283840445176567,
+        "blip2_p10": 0.6229024448954814,
+        "blip2_rr": 0.2414796090368524
+      }
+    },
+    {
+      "label": "secv. + augm + turn text → RO",
+      "run": "retrieval__english+romanian_reviewed__b__inter__tt__seq",
+      "test_language": "romanian_reviewed",
+      "cells": {
+        "clip_p10": 0.4735504417107119,
+        "clip_rr": 0.24704831947111341,
+        "blip2_p10": 0.5207127370115989,
+        "blip2_rr": 0.21752065359977263
+      }
+    }
+  ],
+  "missing": []
+}

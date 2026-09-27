@@ -1,0 +1,144 @@
+import json
+import os
+from datetime import datetime
+
+import numpy as np
+import open_clip
+import pandas as pd
+import torch
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+
+ENCODERS = {
+    "xlmr-vitb32": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
+    "xlmr-vith14": ("xlm-roberta-large-ViT-H-14", "frozen_laion5b_s13b_b90k"),
+    "xlmr-vitb32-ft-romanian_reviewed": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
+}
+
+import argparse as _argparse
+_parser = _argparse.ArgumentParser()
+_parser.add_argument("--encoder", default="xlmr-vitb32", choices=sorted(ENCODERS))
+_cli = _parser.parse_args()
+TAG = _cli.encoder
+MODEL_NAME, PRETRAINED = ENCODERS[TAG]
+
+OUT_DIR = os.path.join(HERE, "clip_embeddings")
+SPLIT_FILES = {
+    "train": "pqpp_multilingual_train.csv",
+    "val": "pqpp_multilingual_val.csv",
+    "test": "pqpp_multilingual_test.csv",
+}
+LANGUAGE_COLUMNS = {
+    "english": "caption",
+    "romanian": "caption_romanian",
+    "romanian_reviewed": "caption_romanian_reviewed",
+}
+
+BATCH_SIZE = 256
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME, pretrained=PRETRAINED)
+if "-ft-" in TAG:
+
+    _lang = TAG.split("-ft-")[1]
+    _ck = torch.load(os.path.join(HERE, "..", "models", "checkpoints",
+                                  f"clip_finetuned_{_lang}.pt"),
+                     map_location="cpu", weights_only=False)
+    model.load_state_dict(_ck["model_state_dict"])
+    print(f"greutati adaptate: epoca {_ck['epoch']}, R@1 "
+          f"{_ck['baseline_recall@1']:.3f} -> {_ck['recall@1']:.3f}")
+tokenizer = open_clip.get_tokenizer(MODEL_NAME)
+model.eval().to(device)
+print(f"{MODEL_NAME} / {PRETRAINED} pe {device}")
+print(f"context length: {model.context_length}")
+
+frames = []
+for split_name, filename in SPLIT_FILES.items():
+    frame = pd.read_csv(os.path.join(HERE, filename))
+    frame["split"] = split_name
+    frames.append(frame)
+data = pd.concat(frames, ignore_index=True)
+data["prompt_key"] = data["source"] + ":" + data["caption_id"].astype(str)
+print(f"prompturi: {len(data)}")
+
+image_path = os.path.join(OUT_DIR, f"image_embeddings_{TAG}.npz")
+if os.path.exists(image_path):
+    images = np.load(image_path, allow_pickle=True)
+    image_keys = pd.DataFrame(
+        {
+            "prompt_index": images["prompt_index"],
+            "prompt_key": images["prompt_key"].astype(str),
+            "split": images["split"].astype(str),
+        }
+    ).drop_duplicates("prompt_index").sort_values("prompt_index")
+    assert len(image_keys) == len(data), "numar de prompturi diferit fata de imagini"
+    assert (image_keys["prompt_key"].to_numpy() == data["prompt_key"].to_numpy()).all(), (
+        "ordinea prompturilor nu se potriveste cu fisierul de imagini"
+    )
+    assert (image_keys["split"].to_numpy() == data["split"].to_numpy()).all()
+    print("aliniere cu image_embeddings verificata")
+else:
+    print("ATENTIE: image_embeddings lipseste, alinierea nu poate fi verificata")
+
+def encode(texts):
+    outputs = []
+    with torch.no_grad():
+        for start in range(0, len(texts), BATCH_SIZE):
+            tokens = tokenizer(texts[start : start + BATCH_SIZE]).to(device)
+            outputs.append(model.encode_text(tokens).float().cpu().numpy())
+    return np.concatenate(outputs).astype(np.float32)
+
+arrays = {
+    "prompt_index": np.arange(len(data), dtype=np.int32),
+    "prompt_key": data["prompt_key"].to_numpy(),
+    "split": data["split"].to_numpy(),
+    "caption_id": data["caption_id"].to_numpy(dtype=np.int32),
+    "source": data["source"].to_numpy(),
+}
+
+for language, column in LANGUAGE_COLUMNS.items():
+    assert column in data.columns, f"lipseste coloana {column}"
+    assert data[column].notna().all(), f"valori lipsa in {column}"
+    embeddings = encode([str(x) for x in data[column]])
+    arrays[f"text_{language}"] = embeddings
+    norms = np.linalg.norm(embeddings, axis=1)
+    print(f"  {language:<20} {embeddings.shape}  norma medie {norms.mean():.2f}")
+
+english = arrays["text_english"]
+english_unit = english / np.linalg.norm(english, axis=1, keepdims=True)
+print("\naliniere fata de engleza (cosinus mediu, primele 1000 de prompturi):")
+for language in LANGUAGE_COLUMNS:
+    if language == "english":
+        continue
+    other = arrays[f"text_{language}"]
+    other_unit = other / np.linalg.norm(other, axis=1, keepdims=True)
+    matched = (english_unit[:1000] * other_unit[:1000]).sum(-1).mean()
+    mismatched = (english_unit[:1000] @ other_unit[:1000].T)
+    mismatched = mismatched[~np.eye(1000, dtype=bool)].mean()
+    print(f"  {language:<20} perechi corecte {matched:.3f}   gresite {mismatched:.3f}")
+
+npz_path = os.path.join(OUT_DIR, f"text_embeddings_{TAG}.npz")
+np.savez_compressed(npz_path, **arrays)
+
+manifest = {
+    "created": datetime.now().isoformat(timespec="seconds"),
+    "model": {
+        "name": MODEL_NAME,
+        "pretrained": PRETRAINED,
+        "library": f"open_clip_torch {open_clip.__version__}",
+        "embed_dim": int(english.shape[1]),
+        "context_length": int(model.context_length),
+        "normalized": False,
+    },
+    "languages": LANGUAGE_COLUMNS,
+    "prompts": int(len(data)),
+    "alignment_key": "prompt_index -- acelasi ca in image_embeddings; randul i din "
+    "text_<limba> corespunde celor 4 imagini cu prompt_index == i",
+}
+manifest_path = os.path.join(OUT_DIR, f"text_embeddings_{TAG}.manifest.json")
+with open(manifest_path, "w") as handle:
+    json.dump(manifest, handle, indent=2, ensure_ascii=False)
+
+print(f"\nscris: {os.path.relpath(npz_path, HERE)} "
+      f"({os.path.getsize(npz_path) / 2**20:.0f} MiB)")
+print(f"scris: {os.path.relpath(manifest_path, HERE)}")

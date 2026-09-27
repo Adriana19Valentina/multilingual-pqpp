@@ -1,0 +1,82 @@
+{
+  "run": "glide__english",
+  "predictor": "finetuned_clip",
+  "language": "english",
+  "target": "glide",
+  "target_column": "hbpp_glide",
+  "target_family": "generative",
+  "model_name": "longclip-b",
+  "eval_languages": [
+    "english"
+  ],
+  "normalize": "none",
+  "images": "all",
+  "images_per_prompt": 4,
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 100,
+  "best_config": {
+    "learning_rate": 0.0001,
+    "weight_decay": 0,
+    "epoch": 6,
+    "val_mse": 0.04152355715632439
+  },
+  "evaluations": {
+    "english": {
+      "setting": "in-limba",
+      "total": {
+        "n": 2080,
+        "pearson": 0.6484799304620168,
+        "pearson_p": 1.6710471653669058e-248,
+        "kendall": 0.47411791852665647,
+        "kendall_p": 1.5464942240863514e-220,
+        "spearman": 0.6570305787411789,
+        "spearman_p": 2.7540991176341433e-257,
+        "mse": 0.041885646753402,
+        "rmse": 0.2046598318024375,
+        "mae": 0.15771369954061684,
+        "r2": 0.41947945366769557,
+        "bias_raw": -0.018356750879404887
+      },
+      "mscoco": {
+        "n": 2000,
+        "pearson": 0.6550741751365271,
+        "pearson_p": 1.6658646501419696e-245,
+        "kendall": 0.47804390801411634,
+        "kendall_p": 9.411877410134605e-216,
+        "spearman": 0.662006872675581,
+        "spearman_p": 1.6656807124468118e-252,
+        "mse": 0.041292426577659205,
+        "rmse": 0.20320538028718435,
+        "mae": 0.1564600497699446,
+        "r2": 0.42815611575414325,
+        "bias_raw": -0.019128123007880315
+      },
+      "drawbench": {
+        "n": 80,
+        "pearson": 0.45625375219770725,
+        "pearson_p": 2.1053236480001756e-05,
+        "kendall": 0.35256600818211015,
+        "kendall_p": 6.911531773260651e-06,
+        "spearman": 0.4821883960396698,
+        "spearman_p": 5.926741756445101e-06,
+        "mse": 0.05671615114697172,
+        "rmse": 0.23815152980187157,
+        "mae": 0.1890549438074231,
+        "r2": 0.1954392932895177,
+        "bias_raw": 0.0009275523324807633
+      }
+    }
+  }
+}

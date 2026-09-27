@@ -1,0 +1,243 @@
+==================================================================================================================================
+PQPP multilingv -- predictor pre-generare/pre-regasire (fine-tuned BERT)
+generat: 2026-09-22 09:45
+==================================================================================================================================
+
+Structura urmeaza Tabelul 3 din PQPP (arXiv 2406.04746v2, pag. 8).
+Randul de referinta e randul 'Fine-tuned BERT' din paper: bert-base-cased,
+engleza, acelasi split (6080/2040/2080) si aceleasi tinte.
+Rularile noastre folosesc bert-base-multilingual-cased.
+
+‡ p < 0.001   † p < 0.01   fata de linia de baza aleatoare.
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+SUBSET: total
+----------------------------------------------------------------------------------------------------------------------------------
+                                   GLIDE              SDXL              CLIP              CLIP            BLIP-2            BLIP-2
+                                    HBPP              HBPP              P@10                RR              P@10                RR
+                        Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall
+----------------------------------------------------------------------------------------------------------------------------------
+PQPP paper (BERT-cased)   0.566‡   0.406‡   0.281‡   0.232‡   0.451‡   0.277‡   0.221‡   0.176‡   0.511‡   0.328‡   0.168‡   0.139‡
+----------------------------------------------------------------------------------------------------------------------------------
+English                  0.592‡   0.425‡   0.326‡   0.230‡   0.381‡   0.245‡   0.209‡   0.137‡   0.457‡   0.295‡   0.206‡   0.154‡
+  ^ delta vs paper      +0.026   +0.019   +0.045   -0.002   -0.070   -0.032   -0.012   -0.039   -0.054   -0.033   +0.038   +0.015 
+  EN -> RO (reviewed)    0.504‡   0.361‡   0.173‡   0.133‡   0.190‡   0.127‡   0.139‡   0.089‡   0.235‡   0.159‡   0.033    0.045†
+  EN -> RO (raw MT)      0.495‡   0.355‡   0.169‡   0.137‡   0.198‡   0.134‡   0.148‡   0.093‡   0.249‡   0.165‡   0.029    0.041 
+Romanian (reviewed)      0.558‡   0.397‡   0.303‡   0.203‡   0.317‡   0.199‡   0.180‡   0.122‡   0.405‡   0.265‡   0.189‡   0.134‡
+  RO -> EN               0.504‡   0.357‡   0.214‡   0.173‡   0.191‡   0.134‡   0.161‡   0.112‡   0.307‡   0.213‡   0.167‡   0.122‡
+
+----------------------------------------------------------------------------------------------------------------------------------
+SUBSET: mscoco
+----------------------------------------------------------------------------------------------------------------------------------
+                                   GLIDE              SDXL              CLIP              CLIP            BLIP-2            BLIP-2
+                                    HBPP              HBPP              P@10                RR              P@10                RR
+                        Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall
+----------------------------------------------------------------------------------------------------------------------------------
+English                  0.601‡   0.432‡   0.329‡   0.230‡   0.387‡   0.256‡   0.230‡   0.163‡   0.450‡   0.291‡   0.194‡   0.146‡
+  EN -> RO (reviewed)    0.517‡   0.370‡   0.188‡   0.135‡   0.212‡   0.145‡   0.160‡   0.108‡   0.251‡   0.169‡   0.062†   0.062‡
+  EN -> RO (raw MT)      0.508‡   0.365‡   0.184‡   0.139‡   0.221‡   0.152‡   0.169‡   0.112‡   0.266‡   0.175‡   0.058†   0.060‡
+Romanian (reviewed)      0.569‡   0.404‡   0.301‡   0.201‡   0.337‡   0.224‡   0.182‡   0.129‡   0.404‡   0.266‡   0.182‡   0.133‡
+  RO -> EN               0.513‡   0.363‡   0.207‡   0.170‡   0.226‡   0.168‡   0.159‡   0.112‡   0.313‡   0.223‡   0.160‡   0.122‡
+
+----------------------------------------------------------------------------------------------------------------------------------
+SUBSET: drawbench
+----------------------------------------------------------------------------------------------------------------------------------
+                                   GLIDE              SDXL              CLIP              CLIP            BLIP-2            BLIP-2
+                                    HBPP              HBPP              P@10                RR              P@10                RR
+                        Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall
+----------------------------------------------------------------------------------------------------------------------------------
+English                  0.403‡   0.284‡   0.318†   0.228†      n/a      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+  EN -> RO (reviewed)    0.173    0.127    0.083    0.111       n/a      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+  EN -> RO (raw MT)      0.164    0.114    0.089    0.122       n/a      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+Romanian (reviewed)      0.278    0.209†   0.304†   0.230†      n/a      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+  RO -> EN               0.297†   0.205†   0.289†   0.205       n/a      n/a      n/a      n/a      n/a      n/a      n/a      n/a
+
+n/a: pe regasire, DrawBench are 95-97% dintre tinte exact zero -- prompturile
+     nu descriu imagini din MS COCO, deci corelatiile nu sunt interpretabile.
+
+
+==================================================================================================================================
+PREDICTORUL CLIP (post-generare) -- doar tintele de generare
+==================================================================================================================================
+Long-CLIP din paper e monolingv englezesc (vocabular BPE de 49.408 tokeni,
+fara diacritice romanesti). Inlocuit cu xlm-roberta-base-ViT-B-32 (LAION-5B),
+care are turn de text multilingv si acelasi turn de imagine ViT-B/32.
+CLIP ramane inghetat; se antreneaza doar capul MLP 1024-512-256-1.
+Randul de referinta NU e direct comparabil: difera si modelul de baza.
+
+                                      GLIDE HBPP         SDXL HBPP
+                                Pearson  Kendall  Pearson  Kendall
+------------------------------------------------------------------
+PQPP paper (Long-CLIP)           0.649‡   0.474‡   0.380‡   0.246‡
+------------------------------------------------------------------
+English                          0.663‡   0.486‡   0.347‡   0.228‡
+EN -> RO (reviewed)              0.660‡   0.482‡   0.321‡   0.212‡
+EN -> RO (raw MT)                0.660‡   0.482‡   0.321‡   0.212‡
+Romanian (reviewed)              0.660‡   0.482‡   0.328‡   0.218‡
+RO -> EN                         0.662‡   0.484‡   0.334‡   0.222‡
+
+Comparatie intre predictori pe transferul catre romana revizuita:
+  tinta     BERT EN->EN   BERT EN->RO   pastrat   CLIP EN->EN   CLIP EN->RO   pastrat   
+  glide     0.592         0.504         85%       0.663         0.660         99%       
+  sdxl      0.326         0.173         53%       0.347         0.321         93%       
+
+Jumatate din intrarea CLIP (embedding-ul de imagine) nu depinde de limba,
+deci predictorul pastreaza mult mai mult semnal la traducere decat BERT.
+
+
+==================================================================================================================================
+SINTEZA PE GENERARE -- toti cei trei predictori din Tabelul 3
+==================================================================================================================================
+
+                                            GLIDE HBPP           SDXL HBPP
+                                     Pearson   Kendall   Pearson   Kendall
+--------------------------------------------------------------------------
+PQPP paper (encodere originale)
+  Fine-tuned BERT                      0.566     0.406     0.281     0.232
+  Fine-tuned CLIP                      0.649     0.474     0.380     0.246
+  Correlation CNN                      0.548     0.393     0.159     0.107
+
+Rulate de noi
+  BERT (mBERT), engleza                0.592     0.425     0.326     0.230
+  BERT (mBERT), EN -> RO reviz.        0.504     0.361     0.173     0.133
+  BERT (mBERT), romana reviz.          0.558     0.397     0.303     0.203
+
+  CLIP control (Long-CLIP), EN         0.648     0.474     0.382     0.253
+  CLIP (XLM-R), engleza                0.663     0.486     0.347     0.228
+  CLIP (XLM-R), EN -> RO reviz.        0.660     0.482     0.321     0.212
+  CLIP (XLM-R), romana reviz.          0.660     0.482     0.328     0.218
+
+  Correlation CNN (Long-CLIP)          0.553     0.397     0.178     0.119
+
+Correlation CNN apare o singura data: nu foloseste textul promptului, deci
+rezultatul lui e acelasi indiferent de limba -- nu exista rand 'EN -> RO'.
+
+Sensibilitatea la traducere, dupa ponderea textului in intrare (GLIDE):
+  predictor             intrare           EN->EN    EN->RO    pastrat  
+  BERT                  doar text         0.592     0.504     85%      
+  CLIP                  text + imagine    0.663     0.660     99%      
+  Correlation CNN       doar imagine      0.553     0.553     100%     
+
+
+==================================================================================================================================
+TABELUL 3 COMPLET -- toti predictorii, ambele task-uri, subset total
+==================================================================================================================================
+Controalele (Long-CLIP) reproduc encoderul din paper. Correlation CNN nu
+primeste textul promptului, deci are un singur rand: cifrele lui sunt
+identice pentru orice limba.
+
+                                        GLIDE HBPP         SDXL HBPP         CLIP P@10           CLIP RR       BLIP-2 P@10         BLIP-2 RR
+                                  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall
+--------------------------------------------------------------------------------------------------------------------------------------------
+  paper: Fine-tuned BERT            0.566    0.406    0.281    0.232    0.451    0.277    0.221    0.176    0.511    0.328    0.168    0.139
+  paper: Fine-tuned CLIP            0.649    0.474    0.380    0.246    0.473    0.299    0.200    0.149    0.498    0.358    0.166    0.150
+  paper: Correlation CNN            0.548    0.393    0.159    0.107    0.270    0.186    0.189    0.162    0.159    0.133    0.206    0.158
+--------------------------------------------------------------------------------------------------------------------------------------------
+  mBERT, engleza                   0.592‡   0.425‡   0.326‡   0.230‡   0.381‡   0.245‡   0.209‡   0.137‡   0.457‡   0.295‡   0.206‡   0.154‡
+  mBERT, EN -> RO reviz.           0.504‡   0.361‡   0.173‡   0.133‡   0.190‡   0.127‡   0.139‡   0.089‡   0.235‡   0.159‡   0.033    0.045†
+  mBERT, romana reviz.             0.558‡   0.397‡   0.303‡   0.203‡   0.317‡   0.199‡   0.180‡   0.122‡   0.405‡   0.265‡   0.189‡   0.134‡
+
+  CLIP control (Long-CLIP)         0.648‡   0.474‡   0.382‡   0.253‡   0.437‡   0.330‡   0.139‡   0.131‡   0.492‡   0.408‡   0.105‡   0.134‡
+  CLIP XLM-R, engleza              0.663‡   0.486‡   0.347‡   0.228‡   0.376‡   0.263‡   0.071†   0.063‡   0.439‡   0.338‡   0.026    0.043 
+  CLIP XLM-R, EN -> RO reviz.      0.660‡   0.482‡   0.321‡   0.212‡   0.369‡   0.256‡   0.100‡   0.083‡   0.410‡   0.310‡   0.030    0.055†
+  CLIP XLM-R, romana reviz.        0.660‡   0.482‡   0.328‡   0.218‡   0.352‡   0.246‡   0.092‡   0.077‡   0.389‡   0.295‡   0.016    0.037 
+
+  Correlation CNN (orb la limba)   0.553‡   0.397‡   0.178‡   0.119‡   0.336‡   0.178‡   0.184‡   0.129‡   0.322‡   0.194‡   0.119‡   0.082‡
+
+Sensibilitatea la traducere, dupa ponderea textului in intrare:
+  predictor           intrare           tinta       EN->EN    EN->RO    pastrat  
+  mBERT               doar text         glide       0.592     0.504     85%      
+  mBERT               doar text         clip_p10    0.381     0.190     50%      
+  mBERT               doar text         blip2_p10   0.457     0.235     51%      
+  CLIP XLM-R          text + imagine    glide       0.663     0.660     99%      
+  CLIP XLM-R          text + imagine    clip_p10    0.376     0.369     98%      
+  CLIP XLM-R          text + imagine    blip2_p10   0.439     0.410     93%      
+  Correlation CNN     doar imagine      glide       0.553     0.553     100%     
+  Correlation CNN     doar imagine      clip_p10    0.336     0.336     100%     
+  Correlation CNN     doar imagine      blip2_p10   0.322     0.322     100%     
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+CORP LATEX (subset: total)
+----------------------------------------------------------------------------------------------------------------------------------
+English & 0.592$^\ddagger$ & 0.425$^\ddagger$ & 0.326$^\ddagger$ & 0.230$^\ddagger$ & 0.381$^\ddagger$ & 0.245$^\ddagger$ & 0.209$^\ddagger$ & 0.137$^\ddagger$ & 0.457$^\ddagger$ & 0.295$^\ddagger$ & 0.206$^\ddagger$ & 0.154$^\ddagger$ \\
+EN -> RO (reviewed) & 0.504$^\ddagger$ & 0.361$^\ddagger$ & 0.173$^\ddagger$ & 0.133$^\ddagger$ & 0.190$^\ddagger$ & 0.127$^\ddagger$ & 0.139$^\ddagger$ & 0.089$^\ddagger$ & 0.235$^\ddagger$ & 0.159$^\ddagger$ & 0.033 & 0.045$^\dagger$ \\
+EN -> RO (raw MT) & 0.495$^\ddagger$ & 0.355$^\ddagger$ & 0.169$^\ddagger$ & 0.137$^\ddagger$ & 0.198$^\ddagger$ & 0.134$^\ddagger$ & 0.148$^\ddagger$ & 0.093$^\ddagger$ & 0.249$^\ddagger$ & 0.165$^\ddagger$ & 0.029 & 0.041 \\
+Romanian (reviewed) & 0.558$^\ddagger$ & 0.397$^\ddagger$ & 0.303$^\ddagger$ & 0.203$^\ddagger$ & 0.317$^\ddagger$ & 0.199$^\ddagger$ & 0.180$^\ddagger$ & 0.122$^\ddagger$ & 0.405$^\ddagger$ & 0.265$^\ddagger$ & 0.189$^\ddagger$ & 0.134$^\ddagger$ \\
+RO -> EN & 0.504$^\ddagger$ & 0.357$^\ddagger$ & 0.214$^\ddagger$ & 0.173$^\ddagger$ & 0.191$^\ddagger$ & 0.134$^\ddagger$ & 0.161$^\ddagger$ & 0.112$^\ddagger$ & 0.307$^\ddagger$ & 0.213$^\ddagger$ & 0.167$^\ddagger$ & 0.122$^\ddagger$ \\
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+TRANSFER CROSS-LINGV (subset: total) -- rand = limba de antrenare, coloana = limba de test
+----------------------------------------------------------------------------------------------------------------------------------
+
+  GLIDE HBPP
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.592‡    0.425‡    0.495‡    0.355‡    0.504‡    0.361‡
+  Romanian (reviewed)       0.504‡    0.357‡    0.554‡    0.394‡    0.558‡    0.397‡
+
+  SDXL HBPP
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.326‡    0.230‡    0.169‡    0.137‡    0.173‡    0.133‡
+  Romanian (reviewed)       0.214‡    0.173‡    0.303‡    0.206‡    0.303‡    0.203‡
+
+  CLIP P@10
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.381‡    0.245‡    0.198‡    0.134‡    0.190‡    0.127‡
+  Romanian (reviewed)       0.191‡    0.134‡    0.312‡    0.198‡    0.317‡    0.199‡
+
+  CLIP RR
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.209‡    0.137‡    0.148‡    0.093‡    0.139‡    0.089‡
+  Romanian (reviewed)       0.161‡    0.112‡    0.191‡    0.127‡    0.180‡    0.122‡
+
+  BLIP-2 P@10
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.457‡    0.295‡    0.249‡    0.165‡    0.235‡    0.159‡
+  Romanian (reviewed)       0.307‡    0.213‡    0.402‡    0.265‡    0.405‡    0.265‡
+
+  BLIP-2 RR
+                                     English   Romanian (raw MT) Romanian (reviewed)
+                           Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+  English                   0.206‡    0.154‡    0.029     0.041     0.033     0.045†
+  Romanian (reviewed)       0.167‡    0.122‡    0.196‡    0.138‡    0.189‡    0.134‡
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+DEGRADAREA LA TRANSFER: engleza in-limba vs. engleza -> romana revizuita
+----------------------------------------------------------------------------------------------------------------------------------
+Test Steiger pe corelatii dependente (acelasi set de test, aceleasi etichete).
+
+  tinta         EN->EN    EN->RO rev   pastrat   z        p          
+  glide         0.592     0.504        85%       +8.28    2.22e-16   
+  sdxl          0.326     0.173        53%       +7.49    6.93e-14   
+  clip_p10      0.381     0.190        50%       +10.30   0.00e+00   
+  clip_rr       0.209     0.139        66%       +3.28    1.04e-03   
+  blip2_p10     0.457     0.235        51%       +10.87   0.00e+00   
+  blip2_rr      0.206     0.033        16%       +6.75    1.45e-11   
+
+  Un p mic inseamna ca pierderea la transfer e reala, nu zgomot de esantionare.
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+PROVENIENTA
+----------------------------------------------------------------------------------------------------------------------------------
+  rulare                        grila   lr        wd      epoca   val MSE     precizie  
+  blip2_p10__english            9/9     5e-05     0       5       0.04156     fp32      
+  blip2_p10__romanian_reviewed  9/9     5e-05     0.01    5       0.04513     fp32      
+  blip2_rr__english             9/9     0.0001    0.1     7       0.15216     fp32      
+  blip2_rr__romanian_reviewed   9/9     1e-05     0       6       0.15329     fp32      
+  clip_p10__english             9/9     1e-05     0.01    5       0.02637     fp32      
+  clip_p10__romanian_reviewed   9/9     5e-05     0.1     3       0.02665     fp32      
+  clip_rr__english              9/9     0.0001    0.1     3       0.15209     fp32      
+  clip_rr__romanian_reviewed    9/9     1e-05     0       8       0.15344     fp32      
+  glide__english                9/9     5e-05     0.01    3       0.04899     fp32      
+  glide__romanian_reviewed      9/9     0.0001    0.01    2       0.05082     fp32      
+  sdxl__english                 9/9     5e-05     0.01    5       0.02448     fp32      
+  sdxl__romanian_reviewed       9/9     5e-05     0       7       0.02503     fp32      

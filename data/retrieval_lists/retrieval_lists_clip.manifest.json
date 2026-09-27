@@ -1,0 +1,46 @@
+{
+  "model": "openai/clip-vit-base-patch32",
+  "library": "transformers (preprocesare CLIPImageProcessor)",
+  "corpus": "MS COCO train2017, 118287 imagini",
+  "top_k": 25,
+  "validation": {
+    "train_precision": {
+      "exact_match": 0.9957236842105263,
+      "pearson": 0.9806893603717125,
+      "mean_reconstructed": 0.1855592105263158,
+      "mean_published": 0.18337171052631582
+    },
+    "train_reciprocal_rank": {
+      "exact_match": 0.9940789473684211,
+      "pearson": 0.9919446098052874,
+      "mean_reconstructed": 0.4596593450747746,
+      "mean_published": 0.4565946673672705
+    },
+    "val_precision": {
+      "exact_match": 0.9955882352941177,
+      "pearson": 0.9905854576643218,
+      "mean_reconstructed": 0.1548529411764706,
+      "mean_published": 0.15357843137254903
+    },
+    "val_reciprocal_rank": {
+      "exact_match": 0.9931372549019608,
+      "pearson": 0.9960238873684424,
+      "mean_reconstructed": 0.43349661373926074,
+      "mean_published": 0.43163834042481425
+    },
+    "test_precision": {
+      "exact_match": 0.9918269230769231,
+      "pearson": 0.9610330374634756,
+      "mean_reconstructed": 0.1743269230769231,
+      "mean_published": 0.1701923076923077
+    },
+    "test_reciprocal_rank": {
+      "exact_match": 0.9865384615384616,
+      "pearson": 0.9860652491077254,
+      "mean_reconstructed": 0.45893982839828684,
+      "mean_published": 0.4534797057630004
+    }
+  },
+  "overall_exact_match": 0.9928155843984019,
+  "note": "embeddings-urile de query din retrieval_process/clip/ sunt Long-CLIP-L si NU corespund benchmarkului"
+}

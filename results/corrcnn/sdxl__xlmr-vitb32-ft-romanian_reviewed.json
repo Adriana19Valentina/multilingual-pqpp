@@ -1,0 +1,74 @@
+{
+  "run": "sdxl__xlmr-vitb32-ft-romanian_reviewed",
+  "predictor": "correlation_cnn",
+  "target": "sdxl",
+  "target_column": "hbpp_sdxl",
+  "target_family": "generative",
+  "image_encoder": "xlmr-vitb32-ft-romanian_reviewed",
+  "language_independent": true,
+  "note": "predictorul nu foloseste textul promptului; rezultatul e identic pentru orice limba",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 1e-05,
+    "weight_decay": 0,
+    "epoch": 25,
+    "val_mse": 0.026120588183403015
+  },
+  "evaluation": {
+    "total": {
+      "n": 2080,
+      "pearson": 0.20507014775193017,
+      "pearson_p": 3.4671199738630366e-21,
+      "kendall": 0.1262616082273522,
+      "kendall_p": 1.1865681181854355e-15,
+      "spearman": 0.1739911193330056,
+      "spearman_p": 1.3333652052136556e-15,
+      "mse": 0.027386287227272987,
+      "rmse": 0.16548803448677063,
+      "mae": 0.10794944316148758,
+      "r2": 0.036426040266854254,
+      "bias_raw": 0.019306179204134282
+    },
+    "mscoco": {
+      "n": 2000,
+      "pearson": 0.19918521195666172,
+      "pearson_p": 2.416324239724448e-19,
+      "kendall": 0.12132280980352263,
+      "kendall_p": 4.56522174860149e-14,
+      "spearman": 0.16713041039277382,
+      "spearman_p": 5.3699795222332595e-14,
+      "mse": 0.025317005813121796,
+      "rmse": 0.15911318361759186,
+      "mae": 0.10507960617542267,
+      "r2": 0.03650000366685702,
+      "bias_raw": 0.010241017750193733
+    },
+    "drawbench": {
+      "n": 80,
+      "pearson": 0.29519244086933194,
+      "pearson_p": 0.007854902161984374,
+      "kendall": 0.18869729221669965,
+      "kendall_p": 0.02179729412646787,
+      "spearman": 0.25302011185291307,
+      "spearman_p": 0.023546752861402526,
+      "mse": 0.07911832630634308,
+      "rmse": 0.2812798023223877,
+      "mae": 0.1796954721212387,
+      "r2": -0.05309800328220726,
+      "bias_raw": 0.24593521555264797
+    }
+  }
+}

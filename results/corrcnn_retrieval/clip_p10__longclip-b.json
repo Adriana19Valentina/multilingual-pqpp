@@ -1,0 +1,59 @@
+{
+  "run": "clip_p10__longclip-b",
+  "predictor": "correlation_cnn_retrieval",
+  "target": "clip_p10",
+  "system": "clip",
+  "metric": "precision",
+  "image_encoder": "longclip-b",
+  "language_independent": true,
+  "note": "nu foloseste textul query-ului; rezultat identic pentru orice limba",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 1e-05,
+    "weight_decay": 0,
+    "epoch": 25,
+    "val_mse": 0.028466492891311646
+  },
+  "evaluation": {
+    "total": {
+      "n": 2080,
+      "pearson": 0.335526516747821,
+      "pearson_p": 6.6520275778708985e-56,
+      "kendall": 0.178156502558892,
+      "kendall_p": 2.429179080767257e-28,
+      "mean_predicted": 0.13969039916992188,
+      "mean_target": 0.17019230127334595
+    },
+    "mscoco": {
+      "n": 2000,
+      "pearson": 0.33000444958364883,
+      "pearson_p": 5.08623648575185e-52,
+      "kendall": 0.1711196361554412,
+      "kendall_p": 2.1238862045611485e-25,
+      "mean_predicted": 0.14111986756324768,
+      "mean_target": 0.1767999827861786
+    },
+    "drawbench": {
+      "n": 80,
+      "pearson": 0.017677610165023474,
+      "pearson_p": 0.8763191468298194,
+      "kendall": 0.012245305972844083,
+      "kendall_p": 0.8946251956207854,
+      "mean_predicted": 0.1039535403251648,
+      "mean_target": 0.004999999888241291
+    }
+  }
+}

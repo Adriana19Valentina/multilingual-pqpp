@@ -1,0 +1,391 @@
+{
+  "run": "retrieval__english",
+  "predictor": "finetuned_clip_retrieval",
+  "encoder": "xlmr-vitb32",
+  "language": "english",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 5e-05,
+    "weight_decay": 0,
+    "epoch": 15,
+    "val_loss": 0.37717434763908386
+  },
+  "aggregation_note": "reproduce compute_predictions.py, inclusiv offsetul de rang la BLIP-2 RR si pragul median calculat pe setul de test",
+  "eval_languages": [
+    "english",
+    "romanian",
+    "romanian_reviewed"
+  ],
+  "evaluations": {
+    "english": {
+      "setting": "in-limba",
+      "clip_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.3755270665926519,
+          "pearson_p": 1.1891832347306019e-70,
+          "kendall": 0.2631739546011892,
+          "kendall_p": 6.406396671445978e-54,
+          "mean_predicted": 0.4551442307692308,
+          "mean_target": 0.1701923076923077
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.3747014251857217,
+          "pearson_p": 1.0917145473290878e-67,
+          "kendall": 0.263505355379358,
+          "kendall_p": 2.915241269616894e-52,
+          "mean_predicted": 0.46135,
+          "mean_target": 0.1768
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.016093901824047782,
+          "pearson_p": 0.8873234121485638,
+          "kendall": 0.05364513899682371,
+          "kendall_p": 0.5908546007726432,
+          "mean_predicted": 0.30000000000000004,
+          "mean_target": 0.005
+        }
+      },
+      "clip_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.07147564905288893,
+          "pearson_p": 0.001106275087577098,
+          "kendall": 0.06341894975900739,
+          "kendall_p": 0.00016131496783297554,
+          "mean_predicted": 0.5413500027593179,
+          "mean_target": 0.4534797057630004
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.05576996820374131,
+          "pearson_p": 0.012613791655902597,
+          "kendall": 0.04486812811311155,
+          "kendall_p": 0.00918772746651565,
+          "mean_predicted": 0.5483145937408077,
+          "mean_target": 0.47104773376150577
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": -0.004838817453661201,
+          "pearson_p": 0.9660213686539989,
+          "kendall": 0.31799485679419404,
+          "kendall_p": 0.0004065771774936478,
+          "mean_predicted": 0.36723522822207033,
+          "mean_target": 0.014279005800367017
+        }
+      },
+      "blip2_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.4393676407643437,
+          "pearson_p": 6.552553355217256e-99,
+          "kendall": 0.33833400260371205,
+          "kendall_p": 7.029590406719581e-91,
+          "mean_predicted": 0.534375,
+          "mean_target": 0.24346153846153845
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.43928315833787623,
+          "pearson_p": 3.8984720926069124e-95,
+          "kendall": 0.34211219357644773,
+          "kendall_p": 1.9389316186628917e-89,
+          "mean_predicted": 0.5413499999999999,
+          "mean_target": 0.25310000000000005
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.14768516928970135,
+          "pearson_p": 0.19110117235009721,
+          "kendall": 0.12182028832834794,
+          "kendall_p": 0.21790604780307044,
+          "mean_predicted": 0.36000000000000004,
+          "mean_target": 0.0025
+        }
+      },
+      "blip2_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.02598146813284313,
+          "pearson_p": 0.23624491223937988,
+          "kendall": 0.042998956505392795,
+          "kendall_p": 0.015336716651138501,
+          "mean_predicted": 0.031674458233200684,
+          "mean_target": 0.5963318860493177
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": -0.002470848650553352,
+          "pearson_p": 0.9120677298016396,
+          "kendall": 0.018504638798772517,
+          "kendall_p": 0.309601742166283,
+          "mean_predicted": 0.03191156671426942,
+          "mean_target": 0.619453971781611
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.1128525515494225,
+          "pearson_p": 0.31891689589967503,
+          "kendall": 0.2896336392676656,
+          "kendall_p": 0.0016351520166167665,
+          "mean_predicted": 0.02574674620648231,
+          "mean_target": 0.018279742741989218
+        }
+      }
+    },
+    "romanian": {
+      "setting": "transfer zero-shot",
+      "clip_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.37555280961067794,
+          "pearson_p": 1.161614856176537e-70,
+          "kendall": 0.26207308154914655,
+          "kendall_p": 6.324473157774681e-54,
+          "mean_predicted": 0.4492307692307692,
+          "mean_target": 0.1701923076923077
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.3763679618938256,
+          "pearson_p": 2.5350090347073496e-68,
+          "kendall": 0.26300154595505065,
+          "kendall_p": 1.689376243454609e-52,
+          "mean_predicted": 0.45495,
+          "mean_target": 0.1768
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": -0.06758292165153755,
+          "pearson_p": 0.5514103756184489,
+          "kendall": 0.001132451270820882,
+          "kendall_p": 0.9909184303553565,
+          "mean_predicted": 0.30625,
+          "mean_target": 0.005
+        }
+      },
+      "clip_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.10372384798359499,
+          "pearson_p": 2.1320967877429125e-06,
+          "kendall": 0.08914393424931193,
+          "kendall_p": 9.963084491622911e-08,
+          "mean_predicted": 0.5437459449768395,
+          "mean_target": 0.4534797057630004
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.09221035541854494,
+          "pearson_p": 3.627700538609157e-05,
+          "kendall": 0.07463346431326907,
+          "kendall_p": 1.33753628241199e-05,
+          "mean_predicted": 0.5496228334591479,
+          "mean_target": 0.47104773376150577
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": -0.015268263360790277,
+          "pearson_p": 0.8930688860250992,
+          "kendall": 0.3441400110715935,
+          "kendall_p": 0.00013420469947724128,
+          "mean_predicted": 0.39682373291912765,
+          "mean_target": 0.014279005800367017
+        }
+      },
+      "blip2_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.42073665433114865,
+          "pearson_p": 5.104092623854284e-90,
+          "kendall": 0.3189950872632509,
+          "kendall_p": 8.24573002751033e-82,
+          "mean_predicted": 0.5413461538461538,
+          "mean_target": 0.24346153846153845
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.4209976218856069,
+          "pearson_p": 9.654526973957426e-87,
+          "kendall": 0.3222781912830901,
+          "kendall_p": 2.1322556665787887e-80,
+          "mean_predicted": 0.54795,
+          "mean_target": 0.25310000000000005
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.1798698066719762,
+          "pearson_p": 0.11036937768074956,
+          "kendall": 0.13726136793139362,
+          "kendall_p": 0.162388686975262,
+          "mean_predicted": 0.37625000000000003,
+          "mean_target": 0.0025
+        }
+      },
+      "blip2_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.03689364028365901,
+          "pearson_p": 0.0925358632340428,
+          "kendall": 0.06060261443488818,
+          "kendall_p": 0.0006246233242108826,
+          "mean_predicted": 0.03275704988420095,
+          "mean_target": 0.5963318860493177
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.006604277342558855,
+          "pearson_p": 0.76786338246109,
+          "kendall": 0.040329094978204645,
+          "kendall_p": 0.02660756997397146,
+          "mean_predicted": 0.032990443177360704,
+          "mean_target": 0.619453971781611
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.1073561148377371,
+          "pearson_p": 0.3432043847510833,
+          "kendall": 0.3162953345562199,
+          "kendall_p": 0.0006068559544873185,
+          "mean_predicted": 0.02692221755520711,
+          "mean_target": 0.018279742741989218
+        }
+      }
+    },
+    "romanian_reviewed": {
+      "setting": "transfer zero-shot",
+      "clip_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.3691605523400225,
+          "pearson_p": 3.683941487853507e-68,
+          "kendall": 0.25628005671794246,
+          "kendall_p": 1.3254716883741636e-51,
+          "mean_predicted": 0.44735576923076925,
+          "mean_target": 0.1701923076923077
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.3695794740776714,
+          "pearson_p": 9.202040238777249e-66,
+          "kendall": 0.2571964136031864,
+          "kendall_p": 3.0648790068706564e-50,
+          "mean_predicted": 0.45305,
+          "mean_target": 0.1768
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": -0.051253890018808444,
+          "pearson_p": 0.6516215192844663,
+          "kendall": 0.00904551508192579,
+          "kendall_p": 0.9275859764955108,
+          "mean_predicted": 0.305,
+          "mean_target": 0.005
+        }
+      },
+      "clip_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.10035620172423536,
+          "pearson_p": 4.523022616582792e-06,
+          "kendall": 0.08309237716899871,
+          "kendall_p": 6.776184393649876e-07,
+          "mean_predicted": 0.5416289638641599,
+          "mean_target": 0.4534797057630004
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.08868181417520603,
+          "pearson_p": 7.14760236904416e-05,
+          "kendall": 0.06816593141113737,
+          "kendall_p": 6.946733476924555e-05,
+          "mean_predicted": 0.5475291276474158,
+          "mean_target": 0.47104773376150577
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": -0.013280250571452983,
+          "pearson_p": 0.9069251551719626,
+          "kendall": 0.3463191244936235,
+          "kendall_p": 0.00011945061888499039,
+          "mean_predicted": 0.394124869282764,
+          "mean_target": 0.014279005800367017
+        }
+      },
+      "blip2_p10": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.4099140723631186,
+          "pearson_p": 4.1826897628069423e-85,
+          "kendall": 0.31010651011379753,
+          "kendall_p": 2.445203536759385e-77,
+          "mean_predicted": 0.5427403846153847,
+          "mean_target": 0.24346153846153845
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.40936840922437456,
+          "pearson_p": 1.1462126034632784e-81,
+          "kendall": 0.312765891064266,
+          "kendall_p": 9.756287603395082e-76,
+          "mean_predicted": 0.5494,
+          "mean_target": 0.25310000000000005
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.1819595404147305,
+          "pearson_p": 0.10622454515396937,
+          "kendall": 0.1399053268880141,
+          "kendall_p": 0.1538285873067317,
+          "mean_predicted": 0.37625000000000003,
+          "mean_target": 0.0025
+        }
+      },
+      "blip2_rr": {
+        "total": {
+          "n": 2080,
+          "pearson": 0.029808048174394256,
+          "pearson_p": 0.17416531550232586,
+          "kendall": 0.054876481183845124,
+          "kendall_p": 0.0019573766830663615,
+          "mean_predicted": 0.03268991606542098,
+          "mean_target": 0.5963318860493177
+        },
+        "mscoco": {
+          "n": 2000,
+          "pearson": 0.0038806353984881525,
+          "pearson_p": 0.8623060217314443,
+          "kendall": 0.03521855025526785,
+          "kendall_p": 0.052918229258774374,
+          "mean_predicted": 0.032889253349458886,
+          "mean_target": 0.619453971781611
+        },
+        "drawbench": {
+          "n": 80,
+          "pearson": 0.10302290208702773,
+          "pearson_p": 0.3631468181194337,
+          "kendall": 0.30558898300489273,
+          "kendall_p": 0.0008817310847466528,
+          "mean_predicted": 0.027706483964473515,
+          "mean_target": 0.018279742741989218
+        }
+      }
+    }
+  }
+}

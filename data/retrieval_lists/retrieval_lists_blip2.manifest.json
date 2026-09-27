@@ -1,0 +1,45 @@
+{
+  "model": "LAVIS blip2_feature_extractor / pretrain_vitL",
+  "ranking": "cosinus pe cele 32 de token-uri, maxim, sortare descrescatoare",
+  "corpus": "MS COCO train2017, 118287 imagini",
+  "top_k": 25,
+  "validation": {
+    "train_precision": {
+      "exact_match": 0.9883223684210526,
+      "pearson": 0.9859684492472919,
+      "mean_reconstructed": 0.2760526315789474,
+      "mean_published": 0.27381578947368423
+    },
+    "train_reciprocal_rank": {
+      "exact_match": 0.9516447368421053,
+      "pearson": 0.9873512759097866,
+      "mean_reconstructed": 0.6075643365118553,
+      "mean_published": 0.6038001241404275
+    },
+    "val_precision": {
+      "exact_match": 0.9897058823529412,
+      "pearson": 0.9915420836171669,
+      "mean_reconstructed": 0.23818627450980392,
+      "mean_published": 0.23686274509803923
+    },
+    "val_reciprocal_rank": {
+      "exact_match": 0.9406862745098039,
+      "pearson": 0.9926061988855389,
+      "mean_reconstructed": 0.5818683481918118,
+      "mean_published": 0.5800055538326627
+    },
+    "test_precision": {
+      "exact_match": 0.9831730769230769,
+      "pearson": 0.9734994188340111,
+      "mean_reconstructed": 0.24817307692307694,
+      "mean_published": 0.24346153846153845
+    },
+    "test_reciprocal_rank": {
+      "exact_match": 0.9403846153846154,
+      "pearson": 0.9813750858947236,
+      "mean_reconstructed": 0.6024414261999472,
+      "mean_published": 0.5963318860493177
+    }
+  },
+  "overall_exact_match": 0.9656528257389324
+}

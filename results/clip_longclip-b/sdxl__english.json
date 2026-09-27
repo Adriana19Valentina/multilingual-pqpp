@@ -1,0 +1,82 @@
+{
+  "run": "sdxl__english",
+  "predictor": "finetuned_clip",
+  "language": "english",
+  "target": "sdxl",
+  "target_column": "hbpp_sdxl",
+  "target_family": "generative",
+  "model_name": "longclip-b",
+  "eval_languages": [
+    "english"
+  ],
+  "normalize": "none",
+  "images": "all",
+  "images_per_prompt": 4,
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 100,
+  "best_config": {
+    "learning_rate": 5e-05,
+    "weight_decay": 0,
+    "epoch": 21,
+    "val_mse": 0.022544069215655327
+  },
+  "evaluations": {
+    "english": {
+      "setting": "in-limba",
+      "total": {
+        "n": 2080,
+        "pearson": 0.3816088899792015,
+        "pearson_p": 4.3941266739137007e-73,
+        "kendall": 0.25262347167019183,
+        "kendall_p": 9.564812099666402e-58,
+        "spearman": 0.3447927728300531,
+        "spearman_p": 3.929581789445923e-59,
+        "mse": 0.024504168863799896,
+        "rmse": 0.15653807480546034,
+        "mae": 0.09681156896219872,
+        "r2": 0.13783204493135282,
+        "bias_raw": 0.037334683662891825
+      },
+      "mscoco": {
+        "n": 2000,
+        "pearson": 0.3624723072693569,
+        "pearson_p": 3.791408598033613e-63,
+        "kendall": 0.24694935836467177,
+        "kendall_p": 3.270844499794507e-53,
+        "spearman": 0.3375587889119106,
+        "spearman_p": 1.7152512577825625e-54,
+        "mse": 0.02309189058241575,
+        "rmse": 0.15196016116869498,
+        "mae": 0.0942944870912983,
+        "r2": 0.12118213010824852,
+        "bias_raw": 0.03311805318920817
+      },
+      "drawbench": {
+        "n": 80,
+        "pearson": 0.5119822697390657,
+        "pearson_p": 1.2089362092655242e-06,
+        "kendall": 0.36981782891418197,
+        "kendall_p": 6.935537122358387e-06,
+        "spearman": 0.4949313606194924,
+        "spearman_p": 3.0581246270884456e-06,
+        "mse": 0.05981112589840352,
+        "rmse": 0.24456313274572583,
+        "mae": 0.15973861573470965,
+        "r2": 0.20388894079971298,
+        "bias_raw": 0.1427504455049833
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "run": "sdxl__longclip-b",
+  "predictor": "correlation_cnn",
+  "target": "sdxl",
+  "target_column": "hbpp_sdxl",
+  "target_family": "generative",
+  "image_encoder": "longclip-b",
+  "language_independent": true,
+  "note": "predictorul nu foloseste textul promptului; rezultatul e identic pentru orice limba",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 1e-05,
+    "weight_decay": 0,
+    "epoch": 25,
+    "val_mse": 0.026300759986042976
+  },
+  "evaluation": {
+    "total": {
+      "n": 2080,
+      "pearson": 0.177893832911057,
+      "pearson_p": 2.993068105919284e-16,
+      "kendall": 0.1185550645837426,
+      "kendall_p": 5.596968847318977e-14,
+      "spearman": 0.16291830806990668,
+      "spearman_p": 7.676526280656195e-14,
+      "mse": 0.02770129404962063,
+      "rmse": 0.1664370596408844,
+      "mae": 0.10626912117004395,
+      "r2": 0.025342618018287077,
+      "bias_raw": 0.03271799294926614
+    },
+    "mscoco": {
+      "n": 2000,
+      "pearson": 0.18088572982384418,
+      "pearson_p": 3.5875642774717313e-16,
+      "kendall": 0.11973126644146527,
+      "kendall_p": 9.707913559374718e-14,
+      "spearman": 0.16449309318132505,
+      "spearman_p": 1.3391510532506874e-13,
+      "mse": 0.025521915405988693,
+      "rmse": 0.15975579619407654,
+      "mae": 0.10330228507518768,
+      "r2": 0.02870157336327761,
+      "bias_raw": 0.022831502011706493
+    },
+    "drawbench": {
+      "n": 80,
+      "pearson": 0.2088574322463927,
+      "pearson_p": 0.06299337091373494,
+      "kendall": 0.11475188481435744,
+      "kendall_p": 0.1630880504421659,
+      "spearman": 0.15661858767489112,
+      "spearman_p": 0.1653288273752348,
+      "mse": 0.08218573778867722,
+      "rmse": 0.28668054938316345,
+      "mae": 0.1804397851228714,
+      "r2": -0.09392651813094166,
+      "bias_raw": 0.2798802663882574
+    }
+  }
+}

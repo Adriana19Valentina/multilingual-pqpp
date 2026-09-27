@@ -1,0 +1,180 @@
+{
+  "run": "clip_rr__romanian_reviewed",
+  "language": "romanian_reviewed",
+  "target": "clip_rr",
+  "target_column": "rr_clip",
+  "target_family": "retrieval",
+  "text_column": "caption_romanian_reviewed",
+  "model_name": "bert-base-multilingual-cased",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "num_epochs": [
+      15
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "precision": "fp32",
+  "effective_batch_size": 256,
+  "eval_languages": [
+    "romanian_reviewed",
+    "english",
+    "romanian"
+  ],
+  "best_config": {
+    "learning_rate": 1e-05,
+    "weight_decay": 0,
+    "epoch": 8,
+    "val_mse": 0.1534433364868164,
+    "val_r2": 0.01904273382880306,
+    "checkpoint": "/home/alin/Desktop/PQPP/multilingual_pqpp/models/checkpoints/clip_rr__romanian_reviewed/best.pth"
+  },
+  "evaluations": {
+    "romanian_reviewed": {
+      "setting": "in-limba",
+      "column": "caption_romanian_reviewed",
+      "total": {
+        "n": 2080,
+        "pearson": 0.17978166542306664,
+        "pearson_p": 1.435184813986059e-16,
+        "kendall": 0.12239618509035433,
+        "kendall_p": 2.1016994198466832e-15,
+        "spearman": 0.174205437519359,
+        "spearman_p": 1.229432296363959e-15,
+        "mse": 0.15621165034666407,
+        "rmse": 0.39523619564339507,
+        "mae": 0.35245860711874516,
+        "r2": 0.029278598601928052,
+        "bias_raw": 0.010395996024093072
+      },
+      "mscoco": {
+        "n": 2000,
+        "pearson": 0.18235150256218902,
+        "pearson_p": 2.0536057453214725e-16,
+        "kendall": 0.1285202694299956,
+        "kendall_p": 3.893483675541285e-16,
+        "spearman": 0.18172558141182465,
+        "spearman_p": 2.607513134375813e-16,
+        "mse": 0.1543559499949947,
+        "rmse": 0.39288159793377275,
+        "mae": 0.3490614212675527,
+        "r2": 0.030702479550328676,
+        "bias_raw": -0.006597032688693694
+      },
+      "drawbench": {
+        "n": 80,
+        "pearson": -0.41827551052647277,
+        "pearson_p": 0.00011297971537861431,
+        "kendall": -0.2638450504348877,
+        "kendall_p": 0.0019145445485435526,
+        "spearman": -0.34684905172965896,
+        "spearman_p": 0.0016218498957132036,
+        "mse": 0.2026041591383987,
+        "rmse": 0.4501157174976216,
+        "mae": 0.43738825339855686,
+        "r2": -88.55799396914188,
+        "bias_raw": 0.4352217138437623
+      }
+    },
+    "english": {
+      "setting": "transfer zero-shot",
+      "column": "caption",
+      "total": {
+        "n": 2080,
+        "pearson": 0.16130069954087586,
+        "pearson_p": 1.356414173373598e-13,
+        "kendall": 0.11184516662671104,
+        "kendall_p": 4.13258459670828e-13,
+        "spearman": 0.15849206389675452,
+        "spearman_p": 3.5948448790967934e-13,
+        "mse": 0.16127474828480745,
+        "rmse": 0.4015902741412041,
+        "mae": 0.36851637657385633,
+        "r2": -0.002184211726387275,
+        "bias_raw": 0.06663850581930261
+      },
+      "mscoco": {
+        "n": 2000,
+        "pearson": 0.15905989238798962,
+        "pearson_p": 8.396598602461672e-13,
+        "kendall": 0.11235728193351106,
+        "kendall_p": 1.095872986935527e-12,
+        "spearman": 0.1588996623074362,
+        "spearman_p": 8.855276724517367e-13,
+        "mse": 0.15776423143561918,
+        "rmse": 0.39719545747102797,
+        "mae": 0.3635990062578156,
+        "r2": 0.009299749370513144,
+        "bias_raw": 0.049646020673079806
+      },
+      "drawbench": {
+        "n": 80,
+        "pearson": -0.1928597798279649,
+        "pearson_p": 0.08653376470247173,
+        "kendall": -0.23392876125171935,
+        "kendall_p": 0.005935534163295742,
+        "spearman": -0.31907910979788146,
+        "spearman_p": 0.0039162617739732656,
+        "mse": 0.24903766951451445,
+        "rmse": 0.4990367416478615,
+        "mae": 0.4914506344748729,
+        "r2": -109.08319967032199,
+        "bias_raw": 0.4914506344748729
+      }
+    },
+    "romanian": {
+      "setting": "transfer zero-shot",
+      "column": "caption_romanian",
+      "total": {
+        "n": 2080,
+        "pearson": 0.1912752177613651,
+        "pearson_p": 1.3728794455074828e-18,
+        "kendall": 0.12729415729845367,
+        "kendall_p": 1.5480692719836657e-16,
+        "spearman": 0.18133615429540983,
+        "spearman_p": 7.788159261463012e-17,
+        "mse": 0.15533034574989288,
+        "rmse": 0.39411970992313095,
+        "mae": 0.35125519359138174,
+        "r2": 0.03475515064742396,
+        "bias_raw": 0.008656934973402934
+      },
+      "mscoco": {
+        "n": 2000,
+        "pearson": 0.1950927101385343,
+        "pearson_p": 1.3192669347369352e-18,
+        "kendall": 0.13491892874095351,
+        "kendall_p": 1.2612325235433444e-17,
+        "spearman": 0.1909047961456561,
+        "spearman_p": 7.211118494990811e-18,
+        "mse": 0.15344761210223384,
+        "rmse": 0.3917238977931189,
+        "mae": 0.3478136000507707,
+        "r2": 0.036406501113553924,
+        "bias_raw": -0.00840192732973545
+      },
+      "drawbench": {
+        "n": 80,
+        "pearson": -0.422978042368998,
+        "pearson_p": 9.274311404946465e-05,
+        "kendall": -0.26052101830342456,
+        "kendall_p": 0.002183384439121638,
+        "spearman": -0.3450601060155207,
+        "spearman_p": 0.0017208176734552297,
+        "mse": 0.2023986869413686,
+        "rmse": 0.4498874158513089,
+        "mae": 0.4372950321066572,
+        "r2": -88.46716820396162,
+        "bias_raw": 0.4351284925518626
+      }
+    }
+  }
+}

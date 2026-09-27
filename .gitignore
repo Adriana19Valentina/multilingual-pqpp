@@ -1,0 +1,26 @@
+# Imagini si corpusuri (se descarca separat, vezi README)
+data/images/
+data/drawbench_images/
+data/all/
+*.zip
+
+# Embeddings precalculate (se regenereaza; zeci de GB)
+data/clip_embeddings/
+*.npy
+data/**/corpus_embeddings_*.npz
+data/**/image_embeddings_*.npz
+data/**/text_embeddings_*.npz
+data/**/retrieved_image_embeddings_*.npz
+
+# Greutati antrenate
+*.pth
+*.pt
+checkpoints/
+
+# Loguri si temporare
+logs/
+*.log
+__pycache__/
+*.py[cod]
+.~lock.*#
+.ipynb_checkpoints/

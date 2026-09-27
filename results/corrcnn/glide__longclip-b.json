@@ -1,0 +1,74 @@
+{
+  "run": "glide__longclip-b",
+  "predictor": "correlation_cnn",
+  "target": "glide",
+  "target_column": "hbpp_glide",
+  "target_family": "generative",
+  "image_encoder": "longclip-b",
+  "language_independent": true,
+  "note": "predictorul nu foloseste textul promptului; rezultatul e identic pentru orice limba",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 5e-05,
+    "weight_decay": 0,
+    "epoch": 18,
+    "val_mse": 0.052760254591703415
+  },
+  "evaluation": {
+    "total": {
+      "n": 2080,
+      "pearson": 0.553484906817676,
+      "pearson_p": 2.8006159759943525e-167,
+      "kendall": 0.3968527725330262,
+      "kendall_p": 3.919262272252975e-155,
+      "spearman": 0.5612240551889195,
+      "spearman_p": 6.2249210579389e-173,
+      "mse": 0.050261419266462326,
+      "rmse": 0.2241905927658081,
+      "mae": 0.18032585084438324,
+      "r2": 0.303394124440725,
+      "bias_raw": -0.0401984568997326
+    },
+    "mscoco": {
+      "n": 2000,
+      "pearson": 0.5591927883067557,
+      "pearson_p": 6.529957470053719e-165,
+      "kendall": 0.4003374869826067,
+      "kendall_p": 6.280948536198696e-152,
+      "spearman": 0.5663953109912822,
+      "spearman_p": 4.585206282396319e-170,
+      "mse": 0.04987947642803192,
+      "rmse": 0.22333714365959167,
+      "mae": 0.17954903841018677,
+      "r2": 0.3092372083407049,
+      "bias_raw": -0.04438663735257255
+    },
+    "drawbench": {
+      "n": 80,
+      "pearson": 0.398573191503972,
+      "pearson_p": 0.000250438576167569,
+      "kendall": 0.2936413271488884,
+      "kendall_p": 0.00018045968386757135,
+      "spearman": 0.3887689558030891,
+      "spearman_p": 0.0003655129867289881,
+      "mse": 0.059810101985931396,
+      "rmse": 0.24456104636192322,
+      "mae": 0.19974616169929504,
+      "r2": 0.15154933147570482,
+      "bias_raw": 0.06450605442126592
+    }
+  }
+}

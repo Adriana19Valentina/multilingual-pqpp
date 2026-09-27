@@ -1,0 +1,74 @@
+{
+  "run": "glide__longclip-b__imgmat",
+  "predictor": "correlation_cnn",
+  "target": "glide",
+  "target_column": "hbpp_glide",
+  "target_family": "generative",
+  "image_encoder": "longclip-b",
+  "language_independent": true,
+  "note": "predictorul nu foloseste textul promptului; rezultatul e identic pentru orice limba",
+  "grid_complete": true,
+  "param_grid": {
+    "learning_rate": [
+      1e-05,
+      0.0001,
+      5e-05
+    ],
+    "weight_decay": [
+      0,
+      0.1,
+      0.01
+    ]
+  },
+  "num_epochs": 25,
+  "best_config": {
+    "learning_rate": 0.0001,
+    "weight_decay": 0,
+    "epoch": 23,
+    "val_mse": 0.0502118319272995
+  },
+  "evaluation": {
+    "total": {
+      "n": 2080,
+      "pearson": 0.5799079072867435,
+      "pearson_p": 3.2557384777294323e-187,
+      "kendall": 0.42194485467345455,
+      "kendall_p": 4.191930843151739e-175,
+      "spearman": 0.5845837799112088,
+      "spearman_p": 6.194702028719554e-191,
+      "mse": 0.04793765768408775,
+      "rmse": 0.2189466953277588,
+      "mae": 0.17014171183109283,
+      "r2": 0.33560071908081246,
+      "bias_raw": -0.011282070098269696
+    },
+    "mscoco": {
+      "n": 2000,
+      "pearson": 0.5861084870842619,
+      "pearson_p": 7.680448770232944e-185,
+      "kendall": 0.42558670540566507,
+      "kendall_p": 1.9725236124201044e-171,
+      "spearman": 0.5889846995724222,
+      "spearman_p": 4.403550478148516e-187,
+      "mse": 0.04744469374418259,
+      "rmse": 0.217818021774292,
+      "mae": 0.1692356914281845,
+      "r2": 0.3429556003669294,
+      "bias_raw": -0.01136972337232695
+    },
+    "drawbench": {
+      "n": 80,
+      "pearson": 0.398371593188081,
+      "pearson_p": 0.00025242303794563545,
+      "kendall": 0.29233188979259456,
+      "kendall_p": 0.00019284573538509763,
+      "spearman": 0.40813324249527344,
+      "spearman_p": 0.00017124967589908033,
+      "mse": 0.06026168540120125,
+      "rmse": 0.24548254907131195,
+      "mae": 0.19279241561889648,
+      "r2": 0.14514324919970079,
+      "bias_raw": -0.009090738246838249
+    }
+  }
+}

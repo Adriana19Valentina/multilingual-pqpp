@@ -1,0 +1,12 @@
+# Mediul principal. BLIP-2 are nevoie de LAVIS, incompatibil cu restul --
+# se instaleaza separat, vezi README.
+torch>=2.0
+torchvision
+transformers>=4.36
+open_clip_torch>=2.24
+pandas
+numpy<2
+scipy
+scikit-learn
+pillow
+huggingface_hub

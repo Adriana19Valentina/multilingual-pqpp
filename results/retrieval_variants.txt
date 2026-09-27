@@ -1,0 +1,54 @@
+============================================================================================
+Predictor post-regasire: variantele testate
+generat: 2026-09-27 16:06
+============================================================================================
+
+Encoder XLM-R ViT-B/32 (inghetat, daca nu se spune altfel). Listele de
+regasire sunt reconstruite si validate contra tintelor publicate.
+EN → RO inseamna: antrenat pe engleza, testat pe romana revizuita.
+
+varianta                                  CLIP P@10      CLIP RR  BLIP-2 P@10    BLIP-2 RR
+--------------------------------------------------------------------------------------------
+
+— cod original si controale —
+  PQPP paper (Long-CLIP)                      0,473        0,200        0,498        0,166
+  control Long-CLIP, agregare a               0,437        0,139        0,492        0,105
+  control Long-CLIP, agregare b               0,559        0,224        0,613        0,203
+  XLM-R, concat, agregare a                   0,376        0,071        0,439        0,026
+  XLM-R, concat, agregare b                   0,472        0,137        0,531        0,102
+
+— trasaturi de interactiune —
+  interactiune, EN → EN                       0,509        0,254        0,567        0,204
+  interactiune, EN → RO                       0,450        0,233        0,492        0,188
+  interactiune, RO → RO                       0,468        0,214        0,519        0,162
+
+— turn de text antrenabil —
+  inter + turn text, EN → EN                  0,577        0,343        0,630        0,307
+  inter + turn text, EN → RO                  0,464        0,281        0,477        0,241
+  inter + turn text, RO → RO (secv.)          0,523        0,255        0,579        0,206
+
+— augmentare multilingva —
+  augm EN+RO → EN                             0,500        0,248        0,560        0,204
+  augm EN+RO → RO                             0,477        0,224        0,527        0,191
+  augm EN+ambele → EN                         0,494        0,251        0,553        0,196
+  augm EN+ambele → RO                         0,480        0,227        0,532        0,184
+  augm EN+RO + consistenta → RO               0,479        0,222        0,528        0,183
+
+— secvential (continuare din EN) —
+  secv. RO → RO                               0,467        0,233        0,512        0,199
+  secv. + augm EN+RO → RO                     0,461        0,238        0,507        0,201
+  secv. + augm ambele → RO                    0,465        0,235        0,508        0,194
+  secv. + augm + turn text → EN               0,565        0,284        0,623        0,241
+  secv. + augm + turn text → RO               0,474        0,247        0,521        0,218
+
+--------------------------------------------------------------------------------------------
+Cea mai buna varianta pe fiecare tinta:
+  CLIP P@10        0,577   inter + turn text, EN → EN
+  CLIP RR          0,343   inter + turn text, EN → EN
+  BLIP-2 P@10      0,630   inter + turn text, EN → EN
+  BLIP-2 RR        0,307   inter + turn text, EN → EN
+
+Castigul fata de codul original (concat, agregare a, doar engleza):
+  original              0,437        0,139        0,492        0,105
+  cel mai bun           0,577        0,343        0,630        0,307
+  castig                0,140        0,204        0,138        0,201
