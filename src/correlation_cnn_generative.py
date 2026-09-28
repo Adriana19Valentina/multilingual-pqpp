@@ -95,6 +95,12 @@ if TEXT_ITEMS:
         np.stack([text_npz[c] for c in TEXT_COLUMNS], axis=1).astype(np.float32))
     grouped = torch.cat([texts, grouped], dim=1)
     print(f"  elements per prompt: {TEXT_ITEMS} text + 4 images = {grouped.shape[1]}")
+USABLE = languages.usable_mask(prompts)
+print("coverage:")
+for _split in SPLIT_FILES:
+    languages.report_coverage(
+        _split, USABLE[(prompts["split"] == _split).to_numpy()])
+
 prompts["normalized_target"] = (prompts[TARGET_COLUMN] + 1) / 3
 
 print(f"run={RUN}  (correlation CNN, no text input)")
@@ -114,7 +120,7 @@ def correlation_matrices(batch):
     return unit @ unit.transpose(1, 2)
 
 def split_tensors(split):
-    mask = (prompts["split"] == split).to_numpy()
+    mask = (prompts["split"] == split).to_numpy() & USABLE
     positions = np.flatnonzero(mask)
     return (
         grouped[positions],

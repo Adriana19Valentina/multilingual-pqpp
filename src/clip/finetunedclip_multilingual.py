@@ -122,13 +122,19 @@ else:
     keep = list(range(4))
 IMAGES_PER_PROMPT = len(keep)
 
+USABLE = languages.usable_mask(prompts)
+print("coverage:")
+for _split in SPLIT_FILES:
+    languages.report_coverage(
+        _split, USABLE[(prompts["split"] == _split).to_numpy()])
+
 prompts["normalized_target"] = (prompts[TARGET_COLUMN] + 1) / 3
 assert prompts["normalized_target"].between(0, 1).all()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def build(split, language):
-    mask = (prompts["split"] == split).to_numpy()
+    mask = (prompts["split"] == split).to_numpy() & USABLE
     positions = np.flatnonzero(mask)
     text = text_features[language][positions]
     rows = rows_by_prompt[positions][:, keep]
@@ -225,7 +231,7 @@ torch.save(
     os.path.join(RESULTS_DIR, f"{RUN}.pth"),
 )
 
-test_mask = (prompts["split"] == "test").to_numpy()
+test_mask = (prompts["split"] == "test").to_numpy() & USABLE
 test_prompts = prompts[test_mask].reset_index(drop=True)
 true_raw = test_prompts[TARGET_COLUMN].to_numpy()
 true_norm = test_prompts["normalized_target"].to_numpy()

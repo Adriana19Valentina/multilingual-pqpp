@@ -94,8 +94,12 @@ arrays = {
 
 for language, column in LANGUAGE_COLUMNS.items():
     assert column in data.columns, f"column {column} is missing from the CSV; check COLUMNS in src/languages.py"
-    assert data[column].notna().all(), f"missing values in {column}"
-    embeddings = encode([str(x) for x in data[column]])
+    text = data[column].fillna("").astype(str)
+    blank = int((text.str.strip() == "").sum())
+    if blank:
+        print(f"  {language}: {blank}/{len(text)} prompts without a translation; "
+              f"encoded as empty text and skipped by every predictor")
+    embeddings = encode(list(text))
     arrays[f"text_{language}"] = embeddings
     norms = np.linalg.norm(embeddings, axis=1)
     print(f"  {language:<20} {embeddings.shape}  mean norm {norms.mean():.2f}")

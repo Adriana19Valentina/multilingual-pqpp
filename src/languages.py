@@ -64,6 +64,35 @@ def split_path(split):
     return os.path.join(DATA_DIR, SPLIT_FILES[split])
 
 
+def usable_mask(frame):
+    import pandas as pd
+
+    mask = pd.Series(True, index=frame.index)
+    for language, column in COLUMNS.items():
+        if column not in frame.columns:
+            raise KeyError(
+                f"column '{column}' for language '{language}' is missing from the "
+                f"CSV; check COLUMNS in src/languages.py"
+            )
+        text = frame[column]
+        mask &= text.notna() & (text.astype(str).str.strip() != "")
+    return mask.to_numpy()
+
+
+def report_coverage(name, mask):
+    kept = int(mask.sum())
+    if kept == len(mask):
+        return kept
+    print(f"  {name}: {kept}/{len(mask)} prompts translated in every language, "
+          f"{len(mask) - kept} dropped")
+    if kept == 0:
+        raise SystemExit(
+            f"{name}: no prompt is translated in every language declared in "
+            f"src/languages.py; remove the languages you do not have"
+        )
+    return kept
+
+
 if __name__ == "__main__":
     import pandas as pd
 

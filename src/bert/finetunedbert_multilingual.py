@@ -119,6 +119,12 @@ splits = {
     for name, filename in SPLIT_FILES.items()
 }
 
+print("coverage:")
+for name in list(splits):
+    mask = languages.usable_mask(splits[name])
+    languages.report_coverage(name, mask)
+    splits[name] = splits[name][mask].reset_index(drop=True)
+
 for name, df in splits.items():
     needed = [TARGET_COLUMN] + (
         [TEXT_COLUMN]

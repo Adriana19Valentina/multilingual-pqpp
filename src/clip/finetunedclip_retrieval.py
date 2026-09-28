@@ -94,6 +94,24 @@ relevance_labels = np.load(os.path.join(EMBED_DIR, "retrieval_labels.npz"))
 
 frames = {split: pd.read_csv(languages.split_path(split)) for split in SPLIT_FILES}
 
+masks = {}
+print("coverage:")
+for split in SPLIT_FILES:
+    masks[split] = languages.usable_mask(frames[split])
+    languages.report_coverage(split, masks[split])
+
+lists = {
+    system: {f"{split}_top{TOP_K}": data[f"{split}_top{TOP_K}"][masks[split]]
+             for split in SPLIT_FILES}
+    for system, data in lists.items()
+}
+relevance_labels = {
+    f"{split}_labels": relevance_labels[f"{split}_labels"][masks[split]]
+    for split in SPLIT_FILES
+}
+frames = {split: frame[masks[split]].reset_index(drop=True)
+          for split, frame in frames.items()}
+
 if args.encoder == "longclip-b":
     import sys
     sys.path.insert(0, languages.THIRD_PARTY)

@@ -1,11 +1,12 @@
 {
-  "generated": "2026-09-28T08:32:30",
+  "generated": "2026-09-28T09:19:50",
   "source_paper": "PQPP, arXiv 2406.04746v2, Table 3 (p. 8)",
   "split": {
     "train": 6080,
     "val": 2040,
     "test": 2080
   },
+  "test_prompts_evaluated": 2080,
   "backbone": "bert-base-multilingual-cased",
   "paper_baseline": {
     "backbone": "bert-base-cased",

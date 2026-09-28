@@ -144,6 +144,16 @@ def render(metrics, statistic, width=9):
         return "--".rjust(width)
     return f"{metrics[statistic]:.3f}{mark(metrics[f'{statistic}_p'])}".rjust(width)
 
+TEST_N = None
+for _predictor in ALL_RUNS.values():
+    for _run in _predictor.values():
+        _entry = ((_run or {}).get("evaluations", {}).get(PIVOT, {}) or {}).get("total")
+        if _entry and _entry.get("n"):
+            TEST_N = int(_entry["n"])
+            break
+    if TEST_N:
+        break
+
 lines = []
 add = lines.append
 
@@ -154,8 +164,14 @@ add("=" * 130)
 add("")
 add("The layout follows Table 3 of PQPP (arXiv 2406.04746v2, p. 8).")
 add("The baseline row is the paper's 'Fine-tuned BERT' row: bert-base-cased,")
-add('pivot language, the same split (6080/2040/2080) and the same targets.')
+add("pivot language, the full 6080/2040/2080 split and the same targets.")
 add('Our runs use bert-base-multilingual-cased.')
+if TEST_N is not None and TEST_N != 2080:
+    add("")
+    add(f"NOTE: evaluated on {TEST_N} of the 2080 test prompts -- the rest are not")
+    add("translated in every declared language, so they are dropped from every")
+    add("language alike. Absolute values are therefore not comparable with a run")
+    add("over the full split; the ratios between rows are.")
 add("")
 add('‡ p < 0.001   † p < 0.01   against the random baseline.')
 add("")
@@ -553,7 +569,7 @@ if missing:
     add(f"  Missing {len(missing)} runs:")
     for run_name in sorted(missing):
         target, _, language = run_name.partition("__")
-        add(f"    python3 finetunedbert_multilingual.py --language {language} --target {target}")
+        add(f"    python src/bert/finetunedbert_multilingual.py --language {language} --target {target}")
 
 text_path = os.path.join(RESULTS_DIR, "table3_multilingual.txt")
 with open(text_path, "w") as handle:
@@ -563,6 +579,7 @@ export = {
     "generated": datetime.now().isoformat(timespec="seconds"),
     "source_paper": "PQPP, arXiv 2406.04746v2, Table 3 (p. 8)",
     "split": {"train": 6080, "val": 2040, "test": 2080},
+    "test_prompts_evaluated": TEST_N,
     "backbone": "bert-base-multilingual-cased",
     "paper_baseline": {
         "backbone": "bert-base-cased",

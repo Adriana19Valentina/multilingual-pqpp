@@ -56,13 +56,17 @@ image_features = torch.from_numpy(image_npz["embeddings"])
 retrieval_lists = np.load(os.path.join(EMBED_DIR, f"retrieval_lists_{SYSTEM}.npz"))
 
 frames, targets, grouped = {}, {}, {}
+print("coverage:")
 for split, filename in SPLIT_FILES.items():
-    frames[split] = pd.read_csv(os.path.join(DATA_DIR, filename))
+    frame = pd.read_csv(os.path.join(DATA_DIR, filename))
+    mask = languages.usable_mask(frame)
+    languages.report_coverage(split, mask)
+    frames[split] = frame[mask].reset_index(drop=True)
     targets[split] = torch.from_numpy(
         frames[split][TARGET_COLUMN].to_numpy()).float()
     rows = np.array([
         [row_of_image[int(i)] for i in query_row]
-        for query_row in retrieval_lists[f"{split}_top{TOP_K}"]
+        for query_row in retrieval_lists[f"{split}_top{TOP_K}"][mask]
     ])
     grouped[split] = image_features[rows.reshape(-1)].view(len(rows), TOP_K, -1)
 

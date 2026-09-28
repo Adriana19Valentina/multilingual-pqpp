@@ -1,11 +1,11 @@
 ==================================================================================================================================
 Multilingual PQPP -- pre-generation / pre-retrieval predictor (fine-tuned BERT)
-generated: 2026-09-28 08:32
+generated: 2026-09-28 09:19
 ==================================================================================================================================
 
 The layout follows Table 3 of PQPP (arXiv 2406.04746v2, p. 8).
 The baseline row is the paper's 'Fine-tuned BERT' row: bert-base-cased,
-pivot language, the same split (6080/2040/2080) and the same targets.
+pivot language, the full 6080/2040/2080 split and the same targets.
 Our runs use bert-base-multilingual-cased.
 
 ‡ p < 0.001   † p < 0.01   against the random baseline.
