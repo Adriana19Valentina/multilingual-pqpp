@@ -26,6 +26,7 @@ RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
 HERE = languages.REPO
 RESULTS_DIR = languages.RESULTS_DIR
+os.makedirs(RESULTS_DIR, exist_ok=True)
 PREDICTIONS_DIR = languages.PREDICTIONS_DIR
 
 LANGUAGES = [l for l in (PIVOT, RAW_TARGET, TARGET) if l]
@@ -412,8 +413,8 @@ add("=" * 130)
 add("FULL TABLE 3 -- all predictors, both tasks, full subset")
 add("=" * 130)
 add("The Long-CLIP controls reproduce the encoder from the paper. Correlation CNN does not")
-add('receive the prompt text, so it has a single row: in its')
-add('identical for any language.')
+add('receive the prompt text, so it has a single row: its numbers are')
+add('identical in any language.')
 add("")
 add(" " * 32 + "".join(f"{model + ' ' + measure:>18}" for _, model, measure in MAIN_COLUMNS))
 add(" " * 32 + "".join("  Pearson  Kendall" for _ in MAIN_COLUMNS))

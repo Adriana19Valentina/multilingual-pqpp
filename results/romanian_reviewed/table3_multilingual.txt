@@ -1,6 +1,6 @@
 ==================================================================================================================================
 Multilingual PQPP -- pre-generation / pre-retrieval predictor (fine-tuned BERT)
-generated: 2026-09-28 09:19
+generated: 2026-09-28 10:38
 ==================================================================================================================================
 
 The layout follows Table 3 of PQPP (arXiv 2406.04746v2, p. 8).
@@ -124,8 +124,8 @@ Sensitivity to translation, by the weight of text in the input (GLIDE):
 FULL TABLE 3 -- all predictors, both tasks, full subset
 ==================================================================================================================================
 The Long-CLIP controls reproduce the encoder from the paper. Correlation CNN does not
-receive the prompt text, so it has a single row: in its
-identical for any language.
+receive the prompt text, so it has a single row: its numbers are
+identical in any language.
 
                                         GLIDE HBPP         SDXL HBPP         CLIP P@10           CLIP RR       BLIP-2 P@10         BLIP-2 RR
                                   Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall

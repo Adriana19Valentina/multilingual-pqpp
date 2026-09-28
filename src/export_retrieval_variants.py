@@ -13,6 +13,7 @@ RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
 HERE = languages.REPO
 RESULTS_DIR = languages.RESULTS_DIR
+os.makedirs(RESULTS_DIR, exist_ok=True)
 T = ["clip_p10", "clip_rr", "blip2_p10", "blip2_rr"]
 LABELS = {"clip_p10": "CLIP P@10", "clip_rr": "CLIP RR",
           "blip2_p10": "BLIP-2 P@10", "blip2_rr": "BLIP-2 RR"}

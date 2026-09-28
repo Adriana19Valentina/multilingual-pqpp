@@ -1,20 +1,110 @@
 import os
 
-TARGET_LANGUAGE = "romanian_reviewed"
+# Uncomment exactly one block and comment out the rest. TARGET_LANGUAGE also
+# names the results folder, so each language writes to results/<language>/.
+# The column names must match the ones in data/pqpp_multilingual_*.csv.
 
-RAW_TARGET_LANGUAGE = "romanian"
+# --- Romanian (already run; results in results/romanian_reviewed/) ---
+# TARGET_LANGUAGE = "romanian_reviewed"
+#
+# RAW_TARGET_LANGUAGE = "romanian"
+#
+# COLUMNS = {
+#     "english": "caption",
+#     "romanian": "caption_romanian",
+#     "romanian_reviewed": "caption_romanian_reviewed",
+# }
+#
+# LABELS = {
+#     "english": "English",
+#     "romanian": "Romanian (raw MT)",
+#     "romanian_reviewed": "Romanian (reviewed)",
+# }
+
+# --- French ---
+# TARGET_LANGUAGE = "french_reviewed"
+#
+# RAW_TARGET_LANGUAGE = "french"
+#
+# COLUMNS = {
+#     "english": "caption",
+#     "french": "caption_french",
+#     "french_reviewed": "caption_french_reviewed",
+# }
+#
+# LABELS = {
+#     "english": "English",
+#     "french": "French (raw MT)",
+#     "french_reviewed": "French (reviewed)",
+# }
+
+# --- Italian ---
+TARGET_LANGUAGE = "italian_reviewed"
+
+RAW_TARGET_LANGUAGE = "italian"
 
 COLUMNS = {
     "english": "caption",
-    "romanian": "caption_romanian",
-    "romanian_reviewed": "caption_romanian_reviewed",
+    "italian": "caption_italian",
+    "italian_reviewed": "caption_italian_reviewed",
 }
 
 LABELS = {
     "english": "English",
-    "romanian": "Romanian (raw MT)",
-    "romanian_reviewed": "Romanian (reviewed)",
+    "italian": "Italian (raw MT)",
+    "italian_reviewed": "Italian (reviewed)",
 }
+
+# --- Hindi ---
+# TARGET_LANGUAGE = "hindi_reviewed"
+#
+# RAW_TARGET_LANGUAGE = "hindi"
+#
+# COLUMNS = {
+#     "english": "caption",
+#     "hindi": "caption_hindi",
+#     "hindi_reviewed": "caption_hindi_reviewed",
+# }
+#
+# LABELS = {
+#     "english": "English",
+#     "hindi": "Hindi (raw MT)",
+#     "hindi_reviewed": "Hindi (reviewed)",
+# }
+
+# --- Danish ---
+# TARGET_LANGUAGE = "danish_reviewed"
+#
+# RAW_TARGET_LANGUAGE = "danish"
+#
+# COLUMNS = {
+#     "english": "caption",
+#     "danish": "caption_danish",
+#     "danish_reviewed": "caption_danish_reviewed",
+# }
+#
+# LABELS = {
+#     "english": "English",
+#     "danish": "Danish (raw MT)",
+#     "danish_reviewed": "Danish (reviewed)",
+# }
+
+# --- Arabic ---
+# TARGET_LANGUAGE = "arabic_reviewed"
+#
+# RAW_TARGET_LANGUAGE = "arabic"
+#
+# COLUMNS = {
+#     "english": "caption",
+#     "arabic": "caption_arabic",
+#     "arabic_reviewed": "caption_arabic_reviewed",
+# }
+#
+# LABELS = {
+#     "english": "English",
+#     "arabic": "Arabic (raw MT)",
+#     "arabic_reviewed": "Arabic (reviewed)",
+# }
 
 PIVOT = "english"
 

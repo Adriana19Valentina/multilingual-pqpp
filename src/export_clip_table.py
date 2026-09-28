@@ -13,6 +13,7 @@ RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
 HERE = languages.REPO
 RESULTS_DIR = languages.RESULTS_DIR
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 COLUMNS = [
     ("glide", "GLIDE", "HBPP", "generation"),

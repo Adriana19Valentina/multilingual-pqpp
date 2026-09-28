@@ -12,6 +12,7 @@ RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
 HERE = languages.REPO
 RESULTS_DIR = languages.RESULTS_DIR
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 LANGUAGES = [l for l in (PIVOT, RAW_TARGET, TARGET) if l]
 LANGUAGE_LABELS = {l: languages.LABELS.get(l, l) for l in LANGUAGES}
@@ -174,7 +175,7 @@ if missing:
         note = " (incomplete grid -- rerun)" if "incompleta" in language else ""
         language = language.split(" ")[0]
         print(
-            f"  python3 finetunedbert_multilingual.py "
+            f"  python src/bert/finetunedbert_multilingual.py "
             f"--language {language} --target {target}{note}"
         )
 else:

@@ -28,33 +28,49 @@ The six targets are two generative systems (GLIDE, SDXL, scored by human
 judgement) and two retrieval systems × two metrics (CLIP and BLIP-2, P@10 and
 RR).
 
+## The two configurations
+
+Every predictor is run in two configurations. The comparison between them is the
+result of the study.
+
+| # | trained on | tested on | what it measures |
+|---|---|---|---|
+| 1 | English | your language | **zero-shot transfer** — how much of an English-trained predictor survives translation |
+| 2 | your language | your language | **in-language** — how much fine-tuning on the translation recovers |
+
+Configuration 1 is `--language english`, configuration 2 is
+`--language italian_reviewed`. Each run evaluates its best checkpoint on **every**
+language declared in `src/languages.py`, so configuration 1 needs only one run:
+you read off the row for your language.
+
+That same run also produces an English-on-English row. Ignore it — we have
+already run it, and it is identical for every partner. It is in
+`results/romanian_reviewed/`.
+
+The correlation CNN has only one configuration, because it never reads the
+prompt: its numbers are the same in every language by construction.
+
 ## What you have to run
 
-15 runs in total. Each run is a full grid search over 9 hyperparameter
+24 runs in total. Each run is a full grid search over 9 hyperparameter
 configurations, picks the best on validation, and evaluates it on the test
-split — so 135 trained models altogether. The run count does not change with
+split — so 216 trained models altogether. The run count does not change with
 prompt coverage; only the time per run does.
 
-| step | runs | grid | epochs | approx. time each |
-|---|---|---|---|---|
-| 5. BERT | 6 (one per target) | 9 | 15 | 20 min |
-| 6. CLIP, generation | 2 | 9 | 100 | 2 min |
-| 6. CLIP, retrieval | 1 (gives all 4 cells) | 9 | 25 | 20 min, or 3 h with `--train-text-tower` |
-| 7. CNN, generation | 2 | 9 | 25 | 5 min |
-| 7. CNN, retrieval | 4 | 9 | 25 | 1 h |
+| step | configurations | runs | grid | epochs | approx. time each |
+|---|---|---|---|---|---|
+| 5. BERT | both | 12 (6 targets × 2) | 9 | 15 | 20 min |
+| 6. CLIP, generation | both | 4 (2 targets × 2) | 9 | 100 | 2 min |
+| 6. CLIP, retrieval | both | 2 (each gives all 4 cells) | 9 | 25 | 20 min, or 3 h with `--train-text-tower` |
+| 7. CNN, generation | n/a | 2 | 9 | 25 | 5 min |
+| 7. CNN, retrieval | n/a | 4 | 9 | 25 | 1 h |
 
-Times are for an RTX 3090; roughly 8 hours for everything.
+Times are for an RTX 3090: roughly 9 hours in total, or 14 with
+`--train-text-tower`.
 
 The grid is `learning_rate ∈ {1e-5, 5e-5, 1e-4}` × `weight_decay ∈ {0, 0.01, 0.1}`,
 the same one used in the paper. Do not change it — the comparison across
 languages depends on it.
-
-Every run evaluates its best checkpoint on **all** languages declared in
-`src/languages.py`, not just the one it trained on. So a single run gives you
-both the in-language row and the transfer row back to English.
-
-You do not need to train on English. Our English results are already in
-`results/romanian_reviewed/` and are the same for every partner.
 
 ## What you do not have to compute
 
@@ -150,10 +166,12 @@ partly filled column is fine.
 
 ## 3. Configure `src/languages.py`
 
-This file is the only place where the language is declared. Edit these four
-settings:
+This file is the only place where the language is declared. It already holds one
+block per language — Romanian, French, Italian, Hindi, Danish, Arabic. Uncomment
+yours and comment out the rest. Italian is active by default:
 
 ```python
+# --- Italian ---
 TARGET_LANGUAGE = "italian_reviewed"
 
 RAW_TARGET_LANGUAGE = "italian"
@@ -170,6 +188,9 @@ LABELS = {
     "italian_reviewed": "Italian (reviewed)",
 }
 ```
+
+If your language is not listed, copy any block and change the four names. The
+column names must match the ones you merged in step 2.
 
 `TARGET_LANGUAGE` is the variant every model is trained and reported on, so it
 is the reviewed one. It also sets the results folder: everything is written to
@@ -198,7 +219,17 @@ python src/clip/compute_text_embeddings.py --encoder xlmr-vitb32
 One pass over 10,200 prompts per language. Takes seconds. Needed by steps 6
 and 7.
 
-## 5. Fine-tuned BERT — 6 runs
+## 5. Fine-tuned BERT — 12 runs
+
+Configuration 1, trained on English, tested on your language:
+
+```bash
+for T in glide sdxl clip_p10 clip_rr blip2_p10 blip2_rr; do
+    python src/bert/finetunedbert_multilingual.py --language english --target $T
+done
+```
+
+Configuration 2, trained and tested on your language:
 
 ```bash
 for T in glide sdxl clip_p10 clip_rr blip2_p10 blip2_rr; do
@@ -212,18 +243,24 @@ the text, so it is where translation hurts most — expect the largest drop here
 Each run writes `results/italian_reviewed/<target>__italian_reviewed.json`. The
 grid can be interrupted and resumed: finished configurations are skipped.
 
-## 6. Fine-tuned CLIP — 3 runs
+## 6. Fine-tuned CLIP — 6 runs
 
-Generation, one run per system:
+Generation, one run per system per configuration:
 
 ```bash
+python src/clip/finetunedclip_multilingual.py --language english          --target glide
+python src/clip/finetunedclip_multilingual.py --language english          --target sdxl
 python src/clip/finetunedclip_multilingual.py --language italian_reviewed --target glide
 python src/clip/finetunedclip_multilingual.py --language italian_reviewed --target sdxl
 ```
 
-Retrieval, one run for all four cells:
+Retrieval, one run per configuration, each filling all four cells:
 
 ```bash
+python src/clip/finetunedclip_retrieval.py \
+    --language english --encoder xlmr-vitb32 \
+    --variant b --features interaction --train-text-tower
+
 python src/clip/finetunedclip_retrieval.py \
     --language italian_reviewed --encoder xlmr-vitb32 \
     --variant b --features interaction --train-text-tower
@@ -237,7 +274,7 @@ The three flags are worth about +0.14 to +0.20 Pearson over the original
 formulation. Drop `--train-text-tower` for a much faster first pass; the other
 two cost nothing.
 
-## 7. Correlation CNN — 6 runs
+## 7. Correlation CNN — 6 runs, one configuration
 
 Generation:
 
@@ -270,6 +307,16 @@ python src/export_retrieval_variants.py
 
 Each writes `.txt`, `.tsv` and `.json` into `results/italian_reviewed/`. Add
 `--decimal dot` for an English locale.
+
+The tables carry one row per configuration:
+
+```
+English                  <- ignore, already published
+  pivot -> target        <- configuration 1, zero-shot transfer
+  pivot -> target (raw MT)
+Italian (reviewed)       <- configuration 2, in-language
+  target -> pivot
+```
 
 Cells you have not run appear as `--`. For BERT, the missing commands are listed
 explicitly at the end of the table.
