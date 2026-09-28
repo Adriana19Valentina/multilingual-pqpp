@@ -37,13 +37,13 @@ ALL_TARGETS = [key for key, _, _ in MAIN_COLUMNS]
 parser = argparse.ArgumentParser()
 parser.add_argument("--table", default="main", choices=["main", "transfer"])
 parser.add_argument("--target", default="glide", choices=ALL_TARGETS,
-                    help="doar pentru --table transfer")
+                    help='only for --table transfer')
 parser.add_argument("--subset", default="total", choices=["total", "mscoco", "drawbench"])
 parser.add_argument("--latex", action="store_true")
 parser.add_argument(
     "--no-baseline",
     action="store_true",
-    help="ascunde randul de referinta din paper si diferentele fata de el",
+    help='hide the paper baseline row and the deltas against it',
 )
 args = parser.parse_args()
 
@@ -161,7 +161,7 @@ else:
             line += render(cell(result, test_language, "kendall"), 10)
         print(line)
 
-print("\n‡ p < 0.001   † p < 0.01   (fata de linia de baza aleatoare)")
+print('\n‡ p < 0.001   † p < 0.01   (against the random baseline)')
 
 if missing:
     print(f"\nDe rulat ({len(missing)}):")

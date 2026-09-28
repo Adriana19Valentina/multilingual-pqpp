@@ -81,13 +81,13 @@ def _split_prompts(split):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", action="append",
-                        help="prompt englezesc; se poate repeta")
+                        help='prompt in the pivot language; may be repeated')
     parser.add_argument("--split", choices=["train", "val", "test"],
-                        help="ruleaza pe toate query-urile unui split")
+                        help='run on every query of a split')
     parser.add_argument("--top-k", type=int, default=25)
-    parser.add_argument("--out", help="salveaza id-urile intr-un .npz")
+    parser.add_argument("--out", help='save the ids to an .npz file')
     parser.add_argument("--validate", action="store_true",
-                        help="compara P@10 si RR cu tintele publicate")
+                        help='compare P@10 and RR against the published targets')
     args = parser.parse_args()
 
     if not args.prompt and not args.split:

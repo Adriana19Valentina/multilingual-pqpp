@@ -83,7 +83,7 @@ with open(os.path.join(OUT_DIR, f"corpus_embeddings_{TAG}.manifest.json"), "w") 
     json.dump(
         {
             "created": datetime.now().isoformat(timespec="seconds"),
-            "role": "corpus de regasire pentru reconstructia listelor lipsa",
+            "role": 'retrieval corpus for reconstructing the missing lists',
             "model": {
                 "name": "Long-CLIP-L",
                 "checkpoint": f"{HF_REPO}/{HF_FILE}",
@@ -95,7 +95,7 @@ with open(os.path.join(OUT_DIR, f"corpus_embeddings_{TAG}.manifest.json"), "w") 
             "corpus": {
                 "source": "MS COCO train2017",
                 "images": int(len(paths)),
-                "note": "test2017 exclus: nu contine nicio imagine relevanta",
+                "note": 'test2017 excluded: it contains no relevant image',
             },
         },
         handle, indent=2, ensure_ascii=False,

@@ -94,7 +94,7 @@ if missing:
         f"lipsesc {len(missing)} imagini, prima: {missing[0]}\n"
         f"Verifica {MSCOCO_DIR} si {DRAWBENCH_DIR}."
     )
-print("toate fisierele exista\n")
+print('all files present\n')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model, _, preprocess = open_clip.create_model_and_transforms(
@@ -170,21 +170,15 @@ manifest = {
         "per_split": index.groupby("split").size().to_dict(),
     },
     "layout": {
-        "order": "randurile urmeaza splitul (train, val, test); pentru fiecare "
-        "prompt: sdxl, sdxl, glide, glide",
+        "order": 'rows follow the split order (train, val, test); per prompt: sdxl, sdxl, glide, glide',
         "images_per_prompt": 4,
-        "grouping_key": "prompt_index (0..N-1). NU grupa pe caption_id singur: "
-        "mscoco si drawbench au numerotari independente si se ciocnesc "
-        "(ex. caption_id=81 exista in ambele, in splitul de test). "
-        "Cheia echivalenta e (split, source, caption_id), adica prompt_key.",
+        "grouping_key": 'prompt_index (0..N-1). Do NOT group by caption_id alone: mscoco and drawbench number captions independently and collide (caption_id=81 exists in both, in the test split). The equivalent key is (split, source, caption_id), i.e. prompt_key.',
         "suffixes": SUFFIXES,
         "drawbench_id_offset": DRAWBENCH_ID_OFFSET,
     },
     "usage": {
-        "text_embeddings": "TREBUIE produse cu acelasi model si aceeasi versiune "
-        "pretrained; un alt CLIP e in alt spatiu de embedding",
-        "predictor": "concateneaza [text(512) ; imagine(512)] -> MLP 1024-512-256-1; "
-        "CLIP ramane inghetat",
+        "text_embeddings": 'MUST be produced with the same model and pretrained version; a different CLIP lives in a different embedding space',
+        "predictor": 'concatenate [text(512) ; image(512)] -> MLP 1024-512-256-1; CLIP stays frozen',
         "aggregation": "la test, mediaza cele 4 predictii ale unui prompt",
     },
 }

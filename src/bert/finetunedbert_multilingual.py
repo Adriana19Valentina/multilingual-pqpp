@@ -66,21 +66,19 @@ parser.add_argument(
     nargs="+",
     default=STUDY_LANGUAGES,
     choices=sorted(LANGUAGE_COLUMNS),
-    help="limbile pe care se evalueaza checkpointul castigator (implicit: fara franceza)",
+    help='languages the winning checkpoint is evaluated on',
 )
 parser.add_argument("--target", required=True, choices=sorted(TARGETS))
 parser.add_argument(
     "--precision",
     default="fp32",
     choices=["fp32", "bf16"],
-    help="bf16 mai scurteaza cu ~1.5x, dar schimba numeric antrenarea; fp32 "
-    "(implicit) pastraeaza protocolul publicat",
+    help='bf16 is ~1.5x faster but changes training numerically; fp32 (default) keeps the published protocol',
 )
 parser.add_argument(
     "--keep-checkpoints",
     action="store_true",
-    help="pastreaza toate checkpointurile grilei (~413 MiB fiecare). Implicit se "
-    "sterg dupa ce grila e completa, ramanand doar castigatorul.",
+    help='keep every grid checkpoint (~413 MiB each); by default they are deleted once the grid completes, leaving only the winner',
 )
 args = parser.parse_args()
 
@@ -341,7 +339,7 @@ expected = len(PARAM_GRID["learning_rate"]) * len(PARAM_GRID["weight_decay"])
 complete = len(grid_results) == expected
 
 if not best_params:
-    raise SystemExit("Nicio configuratie nu a rulat cu succes; nimic de evaluat.")
+    raise SystemExit('No configuration completed successfully; nothing to evaluate.')
 if not complete:
     print(
         f"\nATENTIE: {expected - len(grid_results)}/{expected} configuratii lipsesc (OOM). "
@@ -416,7 +414,7 @@ def metrics_for(true_r, pred_r, true_n, pred_n):
 
 for language in eval_languages:
     column = LANGUAGE_COLUMNS[language]
-    setting = "in-limba" if language == args.language else "transfer zero-shot"
+    setting = 'in-language' if language == args.language else "transfer zero-shot"
     _, _, predictions = evaluate_model(model, test_loader_for(column))
     predictions_raw = denormalize(predictions)
 

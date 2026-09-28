@@ -32,8 +32,7 @@ parser.add_argument("--encoder", default="xlmr-vitb32", choices=sorted(ENCODERS)
 parser.add_argument("--epochs", type=int, default=5)
 parser.add_argument("--batch-size", type=int, default=64)
 parser.add_argument("--lr", type=float, default=1e-6,
-                    help="foarte mica: 6.080 de perechi sunt putine pentru CLIP, "
-                    "iar o rata mare duce la uitare catastrofala")
+                    help='very small: 6,080 pairs are few for CLIP, and a large rate causes catastrophic forgetting')
 parser.add_argument("--weight-decay", type=float, default=0.1)
 parser.add_argument("--seed", type=int, default=42)
 args = parser.parse_args()
@@ -152,8 +151,8 @@ for epoch in range(1, args.epochs + 1):
                 "state_dict": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}}
 
 if best["state_dict"] is None:
-    print("\nATENTIE: nicio epoca nu a depasit modelul pre-antrenat pe validare.")
-    print("Fine-tuningul degradeaza encoderul; nu se salveaza checkpoint.")
+    print('\nWARNING: no epoch beat the pretrained model on validation.')
+    print('Fine-tuning degrades the encoder; no checkpoint saved.')
 else:
     suffix = "" if args.encoder == "xlmr-vitb32" else f"_{args.encoder}"
     path = os.path.join(OUT_DIR, f"clip_finetuned_{args.language}{suffix}.pt")

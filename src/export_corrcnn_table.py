@@ -9,10 +9,10 @@ RESULTS_DIR = os.path.join(HERE, "results")
 COLUMNS = [
     ("glide", "GLIDE", "HBPP", "generare"),
     ("sdxl", "SDXL", "HBPP", "generare"),
-    ("clip_p10", "CLIP", "P@10", "regasire"),
-    ("clip_rr", "CLIP", "RR", "regasire"),
-    ("blip2_p10", "BLIP-2", "P@10", "regasire"),
-    ("blip2_rr", "BLIP-2", "RR", "regasire"),
+    ("clip_p10", "CLIP", "P@10", 'retrieval'),
+    ("clip_rr", "CLIP", "RR", 'retrieval'),
+    ("blip2_p10", "BLIP-2", "P@10", 'retrieval'),
+    ("blip2_rr", "BLIP-2", "RR", 'retrieval'),
 ]
 
 PAPER = {
@@ -26,7 +26,7 @@ SETUP = {
         "images": 4, "note": "2 SDXL + 2 GLIDE",
         "conv": "3 straturi (16-64)", "fc1": "262144 -> 512", "out": "sigmoid",
     },
-    "regasire": {
+    'retrieval': {
         "images": 25, "note": "top-25 ale sistemului prezis",
         "conv": "4 straturi (32-64)", "fc1": "65536 -> 1024", "out": "ReLU",
     },
@@ -64,19 +64,19 @@ def number(value, decimals=3):
 lines = []
 add = lines.append
 add("=" * 118)
-add("Correlation CNN -- predictor post-generare / post-regasire")
+add('Correlation CNN -- post-generation / post-retrieval predictor')
 add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 118)
 add("")
-add("Intrarea e o matrice de corelatie 512x512 intre dimensiunile embedding-ului,")
-add("calculata peste imaginile promptului. Textul NU intra niciodata in model:")
-add("`retrieve_embeddings` exista in codul original, dar nu e apelata.")
+add('The input is a 512x512 correlation matrix between embedding dimensions,')
+add("computed over the prompt's images. The text NEVER enters the model:")
+add('`retrieve_embeddings` exists in the original code but is never called.')
 add("")
 add("De aceea tabelul are un singur rand de rezultate. O varianta 'multilingva'")
 add("ar da cifre identice, bit cu bit. Encoderul de imagine e Long-CLIP, cel din")
 add("paper, singurul care permite comparatia cu Tabelul 3.")
 add("")
-add("‡ p < 0.001   † p < 0.01   -- fata de linia de baza aleatoare")
+add('‡ p < 0.001   † p < 0.01   -- against the random baseline')
 add("")
 add(" " * 32 + "".join(f"{m + ' ' + ms:>18}" for _, m, ms, _ in COLUMNS))
 add(" " * 32 + "".join("  Pearson  Kendall" for _ in COLUMNS))
@@ -120,22 +120,22 @@ for target, _, _, _ in COLUMNS:
     add(f"  {target:<12}{parts[0]:<10}{parts[1]:<10}{parts[2]:<12}")
 
 add("")
-add("Configuratia difera intre task-uri (asa e si in codul original):")
+add('The configuration differs between tasks, as it does in the original code:')
 add(f"  {'':<12}{'imagini':<10}{'convolutii':<22}{'fc1':<18}{'iesire':<10}")
 for task, setup in SETUP.items():
     add(f"  {task:<12}{setup['images']:<10}{setup['conv']:<22}"
         f"{setup['fc1']:<18}{setup['out']:<10}")
 add("")
-add("Numarul de imagini conteaza: matricea are rang cel mult (imagini - 1), deci")
-add("pe generare e puternic degenerata (rang <= 3), iar pe regasire mult mai bine")
-add("conditionata (rang <= 24).")
+add('The image count matters: the matrix has rank at most (images - 1), so')
+add('on generation it is strongly degenerate (rank <= 3), while on retrieval it is far')
+add('better conditioned (rank <= 24).')
 
 add("")
-add("Limitare de raportat: codul original impacheteaza cele doua matrici de")
-add("regasire ca [2, 512, 512] si foloseste tinta MEDIATA, dar arhitectura")
-add("accepta un singur canal, iar Tabelul 3 raporteaza per sistem. Cele doua nu")
-add("se pot impaca; s-a ales varianta compatibila cu tabelul -- un model per")
-add("(sistem, metrica). De aici probabil si abaterile mai mari pe regasire.")
+add('Limitation to report: the original code packs the two retrieval matrices')
+add('as [2, 512, 512] and uses the AVERAGED target, but the architecture')
+add('accepts a single channel, while Table 3 reports per system. The two cannot')
+add('be reconciled; the variant compatible with the table was chosen -- one model per')
+add('(system, metric). This probably explains the larger deviations on retrieval.')
 
 text_path = os.path.join(RESULTS_DIR, "correlation_cnn_table.txt")
 with open(text_path, "w") as handle:

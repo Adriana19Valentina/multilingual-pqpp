@@ -34,45 +34,29 @@ SEED = 42
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--language", required=True, choices=sorted(LANGUAGE_COLUMNS),
-                    help="limba principala; apare prima in setul de antrenare")
+                    help='primary language; appears first in the training set')
 parser.add_argument(
     "--augment", nargs="*", default=[], choices=sorted(LANGUAGE_COLUMNS),
-    help="limbi ADAUGATE la antrenare, peste `--language`. Fiecare prompt "
-    "contribuie perechi in fiecare limba, deci setul creste proportional. "
-    "Etichetele de relevanta au fost definite pe engleza, deci o traducere nu "
-    "poate INLOCUI engleza -- dar poate s-o completeze, ca parafraza.")
+    help='languages ADDED to training on top of --language. Every prompt contributes pairs in each language, so the training set grows proportionally. Relevance labels were defined in the pivot language, so a translation cannot REPLACE it, but it can complement it as a paraphrase.')
 parser.add_argument(
     "--init-from", default=None,
-    help="porneste dintr-un checkpoint salvat de o rulare anterioara, in loc de "
-    "initializare aleatoare. Asa se face fine-tuning SECVENTIAL: modelul invata "
-    "intai sarcina pe engleza -- limba in care au fost definite etichetele -- si "
-    "abia apoi se adapteaza la forma de suprafata a traducerii. Rata de invatare "
-    "se reduce automat (--init-lr-scale).")
+    help='start from a checkpoint saved by an earlier run instead of random initialization. This gives SEQUENTIAL fine-tuning: the model first learns the task in the pivot language, the one the labels were defined in, and only then adapts to the surface form of the translation. The learning rate is scaled down automatically via --init-lr-scale.')
 parser.add_argument("--init-lr-scale", type=float, default=0.2,
-                    help="cu cat se inmulteste rata de invatare dupa initializare "
-                    "din checkpoint; mai mica, ca sa nu se uite ce s-a invatat")
+                    help='factor applied to the learning rate after initializing from a checkpoint; smaller, so that what was learned is not forgotten')
 parser.add_argument(
     "--consistency", type=float, default=0.0,
-    help="pondere pentru termenul care forteaza aceeasi predictie intre limbi "
-    "(MSE intre ieșirile pentru acelasi prompt in doua limbi). 0 = dezactivat.")
+    help='weight of the term forcing the same prediction across languages, computed as MSE between the outputs for one prompt in two languages; 0 disables it')
 parser.add_argument("--encoder", required=True, choices=["longclip-b", "xlmr-vitb32", "xlmr-vith14",
                              "xlmr-vitb32-ft-romanian_reviewed"])
 parser.add_argument(
     "--features", default="concat", choices=["concat", "interaction"],
-    help="'concat' = [text ; imagine], ca in original. 'interaction' adauga "
-    "produsul element-cu-element si diferenta absoluta: [t ; i ; t*i ; |t-i|]. "
-    "Face ALINIEREA text-imagine explicita, in loc sa lase reteaua s-o descopere "
-    "-- deci calitatea reprezentarii textuale conteaza mult mai mult.")
+    help="'concat' is [text ; image], as in the original. 'interaction' adds the element-wise product and the absolute difference: [t ; i ; t*i ; |t-i|]. This makes the text-image ALIGNMENT explicit instead of leaving the network to discover it, so the quality of the text representation matters far more.")
 parser.add_argument(
     "--train-text-tower", action="store_true",
-    help="antreneaza turnul de text impreuna cu capul, cu rata de invatare mult "
-    "mai mica. Fara asta, 'fine-tuning pe romana' nu adapteaza nimic sensibil la "
-    "limba -- encoderul e inghetat, iar capul doar invata peste embeddings fixe.")
+    help='train the text tower together with the head, at a much smaller learning rate. Without it, fine-tuning on a translation adapts nothing language-sensitive: the encoder stays frozen and the head merely learns over fixed embeddings.')
 parser.add_argument(
     "--variant", default="a", choices=["a", "b", "c"],
-    help="a = fidel codului original (prag median, offset de rang la BLIP-2 RR); "
-    "b = agregare prin valori asteptate, fara prag si fara offset; "
-    "c = b, plus rangul ca trasatura de intrare",
+    help='a is faithful to the original code, with the median threshold and the rank offset on BLIP-2 RR; b aggregates through expected values, with no threshold and no offset; c is b plus rank as an input feature',
 )
 args = parser.parse_args()
 
@@ -138,7 +122,7 @@ if args.encoder == "longclip-b":
         hf_hub_download("BeichenZhang/LongCLIP-B", "longclip-B.pt"), device=device
     )
     text_model.eval()
-    assert args.language == "english", "Long-CLIP e monolingv; foloseste-l doar pe engleza"
+    assert args.language == "english", 'Long-CLIP is monolingual; use it only on the pivot language'
 
     def encode_text(texts):
         out = []
@@ -245,7 +229,7 @@ def build(split, language=None):
 if args.train_text_tower:
 
     train_x = train_y = val_x = val_y = None
-    print("turn de text ANTRENABIL: textul se re-encodeaza la fiecare pas")
+    print('TRAINABLE text tower: text is re-encoded at every step')
 else:
     parts = [build("train", language) for language in TRAIN_LANGUAGES]
     train_x = torch.cat([x for x, _ in parts])
@@ -483,9 +467,8 @@ results = {
     "train_text_tower": args.train_text_tower,
     "uses_rank_feature": USE_RANK,
     "aggregation_note": (
-        "reproduce compute_predictions.py, inclusiv offsetul de rang la BLIP-2 RR "
-        "si pragul median calculat pe setul de test" if args.variant == "a"
-        else "valori asteptate din probabilitati; fara prag, fara offset de rang"),
+        'reproduces compute_predictions.py, including the rank offset on BLIP-2 RR and the median threshold computed on the test set' if args.variant == "a"
+        else 'expected values from probabilities; no threshold, no rank offset'),
     "eval_languages": eval_languages,
     "evaluations": {},
 }
@@ -496,7 +479,7 @@ for language in eval_languages:
     aggregated = aggregate(raw) if args.variant == "a" else aggregate_expected(raw)
     del test_x
     torch.cuda.empty_cache()
-    setting = "in-limba" if language == args.language else "transfer zero-shot"
+    setting = 'in-language' if language == args.language else "transfer zero-shot"
     print(f"\n=== test pe {language} ({setting}) ===")
     per_language = {"setting": setting}
     for target, values in aggregated.items():

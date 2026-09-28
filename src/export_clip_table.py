@@ -9,10 +9,10 @@ RESULTS_DIR = os.path.join(HERE, "results")
 COLUMNS = [
     ("glide", "GLIDE", "HBPP", "generare"),
     ("sdxl", "SDXL", "HBPP", "generare"),
-    ("clip_p10", "CLIP", "P@10", "regasire"),
-    ("clip_rr", "CLIP", "RR", "regasire"),
-    ("blip2_p10", "BLIP-2", "P@10", "regasire"),
-    ("blip2_rr", "BLIP-2", "RR", "regasire"),
+    ("clip_p10", "CLIP", "P@10", 'retrieval'),
+    ("clip_rr", "CLIP", "RR", 'retrieval'),
+    ("blip2_p10", "BLIP-2", "P@10", 'retrieval'),
+    ("blip2_rr", "BLIP-2", "RR", 'retrieval'),
 ]
 
 PAPER = {
@@ -34,9 +34,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--decimal", default="comma", choices=["comma", "dot"])
 parser.add_argument(
     "--decimals", type=int, default=5,
-    help="cate zecimale se afiseaza. Implicit 5: la 3, diferentele dintre "
-    "traducerea bruta si cea revizuita dispar prin rotunjire (0.66014 si "
-    "0.65978 devin amandoua 0,660), desi sunt reale.",
+    help='how many decimals to print; default 5, because at 3 the difference between raw and reviewed translation vanishes through rounding (0.66014 and 0.65978 both become 0.660) although it is real',
 )
 cli = parser.parse_args()
 
@@ -75,19 +73,19 @@ def number(value, decimals=None):
 lines = []
 add = lines.append
 add("=" * 118)
-add("Fine-tuned CLIP -- predictor post-generare / post-regasire")
+add('Fine-tuned CLIP -- post-generation / post-retrieval predictor')
 add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 118)
 add("")
-add("CLIP e inghetat; se antreneaza doar capul MLP 1024-512-256-1 peste")
-add("[text(512) ; imagine(512)]. 'Antrenare pe romana' inseamna deci antrenarea")
-add("capului pe embeddings romanesti, nu adaptarea encoderului la romana.")
+add('CLIP is frozen; only the 1024-512-256-1 MLP head is trained, over')
+add('[text(512) ; image(512)]. Training on a translation therefore means training')
+add('the head on translated embeddings, not adapting the encoder to that language.')
 add("")
-add("Generare: 4 imagini per prompt, predictiile se mediaza. Regasire: 25+25")
-add("imagini per query, clasificare binara, apoi agregare in P@10 / RR.")
-add("Listele de regasire sunt reconstruite (originalele nu au fost publicate).")
+add('Generation: 4 images per prompt, predictions averaged. Retrieval: 25+25')
+add('images per query, binary classification, then aggregation into P@10 / RR.')
+add('The retrieval lists are reconstructed (the originals were never published).')
 add("")
-add("‡ p < 0.001   † p < 0.01   -- fata de linia de baza aleatoare")
+add('‡ p < 0.001   † p < 0.01   -- against the random baseline')
 add("")
 WIDTH = max(9, cli.decimals + 5)
 add(" " * 32 + "".join(f"{m + ' ' + ms:>{2 * WIDTH}}" for _, m, ms, _ in COLUMNS))
@@ -132,7 +130,7 @@ for variant, train_language, test_language, label in ROWS:
         add("")
 
 add("")
-add("Degradarea la traducere (EN in-limba -> EN aplicat pe romana revizuita):")
+add('Degradation under translation (pivot in-language -> pivot applied to the translation):')
 add(f"  {'tinta':<12}{'EN->EN':<12}{'EN->RO':<12}{'pastrat':<10}")
 for target, _, _, _ in COLUMNS:
     source = cell("xlmr", "english", "english", target)
@@ -144,7 +142,7 @@ for target, _, _, _ in COLUMNS:
         f"{transfer['pearson'] / source['pearson']:<10.1%}")
 
 add("")
-add("Antrenare in limba vs transfer zero-shot, ambele testate pe romana revizuita:")
+add('In-language training vs zero-shot transfer, both tested on the target language:')
 add(f"  {'tinta':<12}{'EN->RO':<12}{'RO->RO':<12}{'diferenta':<12}")
 for target, _, _, _ in COLUMNS:
     transfer = cell("xlmr", "english", "romanian_reviewed", target)
@@ -177,7 +175,7 @@ json_path = os.path.join(RESULTS_DIR, "finetuned_clip_table.json")
 with open(json_path, "w") as handle:
     json.dump({
         "generated": datetime.now().isoformat(timespec="seconds"),
-        "predictor": "fine-tuned CLIP (CLIP inghetat, se antreneaza capul MLP)",
+        "predictor": 'fine-tuned CLIP (CLIP frozen, the MLP head is trained)',
         "paper_baseline": {"encoder": "Long-CLIP", "values": {
             t: {"pearson": p, "kendall": k} for t, (p, k) in PAPER.items()}},
         "rows": [{"variant": v, "train_language": tr, "test_language": te,

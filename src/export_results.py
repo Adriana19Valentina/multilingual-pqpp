@@ -12,9 +12,7 @@ parser.add_argument(
     "--decimal",
     default="comma",
     choices=["comma", "dot"],
-    help="separatorul zecimal in fisierele TSV. Implicit virgula, ca sa se lipeasca "
-    "direct in LibreOffice/Excel cu locale romanesc (LC_NUMERIC=ro_RO). Foloseste "
-    "'dot' pentru Google Sheets sau un spreadsheet cu locale englezesc.",
+    help='decimal separator in the TSV files; comma by default so they paste straight into a comma-locale spreadsheet, dot for Google Sheets or an English locale',
 )
 cli_args = parser.parse_args()
 
@@ -146,16 +144,16 @@ lines = []
 add = lines.append
 
 add("=" * 130)
-add("PQPP multilingv -- predictor pre-generare/pre-regasire (fine-tuned BERT)")
+add('Multilingual PQPP -- pre-generation / pre-retrieval predictor (fine-tuned BERT)')
 add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 130)
 add("")
 add("Structura urmeaza Tabelul 3 din PQPP (arXiv 2406.04746v2, pag. 8).")
-add("Randul de referinta e randul 'Fine-tuned BERT' din paper: bert-base-cased,")
-add("engleza, acelasi split (6080/2040/2080) si aceleasi tinte.")
-add("Rularile noastre folosesc bert-base-multilingual-cased.")
+add("The baseline row is the paper's 'Fine-tuned BERT' row: bert-base-cased,")
+add('pivot language, the same split (6080/2040/2080) and the same targets.')
+add('Our runs use bert-base-multilingual-cased.')
 add("")
-add("‡ p < 0.001   † p < 0.01   fata de linia de baza aleatoare.")
+add('‡ p < 0.001   † p < 0.01   against the random baseline.')
 add("")
 
 for subset in SUBSETS:
@@ -200,19 +198,19 @@ for subset in SUBSETS:
 
     if subset == "drawbench":
         add("")
-        add("n/a: pe regasire, DrawBench are 95-97% dintre tinte exact zero -- prompturile")
-        add("     nu descriu imagini din MS COCO, deci corelatiile nu sunt interpretabile.")
+        add('n/a: on retrieval, 95-97% of DrawBench targets are exactly zero -- its prompts')
+        add('     do not describe MS COCO images, so the correlations are not interpretable.')
 
 add("")
 add("")
 add("=" * 130)
-add("PREDICTORUL CLIP (post-generare) -- doar tintele de generare")
+add('CLIP PREDICTOR (post-generation) -- generation targets only')
 add("=" * 130)
-add("Long-CLIP din paper e monolingv englezesc (vocabular BPE de 49.408 tokeni,")
-add("fara diacritice romanesti). Inlocuit cu xlm-roberta-base-ViT-B-32 (LAION-5B),")
-add("care are turn de text multilingv si acelasi turn de imagine ViT-B/32.")
-add("CLIP ramane inghetat; se antreneaza doar capul MLP 1024-512-256-1.")
-add("Randul de referinta NU e direct comparabil: difera si modelul de baza.")
+add('Long-CLIP from the paper is monolingual English (a 49,408-token BPE vocabulary,')
+add('without diacritics). Replaced with xlm-roberta-base-ViT-B-32 (LAION-5B),')
+add('which has a multilingual text tower and the same ViT-B/32 image tower.')
+add('CLIP stays frozen; only the 1024-512-256-1 MLP head is trained.')
+add('The baseline row is NOT directly comparable: the base model differs too.')
 add("")
 add(" " * 30 + "".join(f"{model + ' ' + measure:>18}"
                        for _, model, measure in MAIN_COLUMNS[:2]))
@@ -232,7 +230,7 @@ for train_language, test_language, label in ROW_SPECS:
     add(row)
 
 add("")
-add("Comparatie intre predictori pe transferul catre romana revizuita:")
+add('Comparison between predictors on transfer to the target language:')
 add(f"  {'tinta':<10}{'BERT EN->EN':<14}{'BERT EN->RO':<14}{'pastrat':<10}"
     f"{'CLIP EN->EN':<14}{'CLIP EN->RO':<14}{'pastrat':<10}")
 for target, model, measure in MAIN_COLUMNS[:2]:
@@ -249,13 +247,13 @@ for target, model, measure in MAIN_COLUMNS[:2]:
                      f"{retained:<10.0%}")
     add("".join(cells))
 add("")
-add("Jumatate din intrarea CLIP (embedding-ul de imagine) nu depinde de limba,")
-add("deci predictorul pastreaza mult mai mult semnal la traducere decat BERT.")
+add('Half of the CLIP input, the image embedding, does not depend on language,')
+add('so the predictor retains far more signal under translation than BERT does.')
 
 add("")
 add("")
 add("=" * 130)
-add("SINTEZA PE GENERARE -- toti cei trei predictori din Tabelul 3")
+add('GENERATION SUMMARY -- all three predictors from Table 3')
 add("=" * 130)
 add("")
 add(" " * 34 + f"{'GLIDE HBPP':>20}{'SDXL HBPP':>20}")
@@ -285,7 +283,7 @@ def generative_row(label, getter):
             row += f"{metrics['pearson']:>10.3f}{metrics['kendall']:>10.3f}"
     add(row)
 
-generative_row("  BERT (mBERT), engleza",
+generative_row('  BERT (mBERT), pivot',
                lambda t: stats(ALL_RUNS["bert"][(t, "english")], "english", "total"))
 generative_row("  BERT (mBERT), EN -> RO reviz.",
                lambda t: stats(ALL_RUNS["bert"][(t, "english")], "romanian_reviewed", "total"))
@@ -301,7 +299,7 @@ def load_clip_control(target):
         return json.load(handle)["evaluations"]["english"]["total"]
 
 generative_row("  CLIP control (Long-CLIP), EN", load_clip_control)
-generative_row("  CLIP (XLM-R), engleza",
+generative_row('  CLIP (XLM-R), pivot',
                lambda t: stats(ALL_RUNS["clip"][(t, "english")], "english", "total"))
 generative_row("  CLIP (XLM-R), EN -> RO reviz.",
                lambda t: stats(ALL_RUNS["clip"][(t, "english")], "romanian_reviewed", "total"))
@@ -311,10 +309,10 @@ add("")
 generative_row("  Correlation CNN (Long-CLIP)",
                lambda t: (load_corrcnn(t) or {}).get("evaluation", {}).get("total"))
 add("")
-add("Correlation CNN apare o singura data: nu foloseste textul promptului, deci")
-add("rezultatul lui e acelasi indiferent de limba -- nu exista rand 'EN -> RO'.")
+add('Correlation CNN appears once: it does not use the prompt text, so')
+add('its result is the same in any language -- there is no transfer row.')
 add("")
-add("Sensibilitatea la traducere, dupa ponderea textului in intrare (GLIDE):")
+add('Sensitivity to translation, by the weight of text in the input (GLIDE):')
 add(f"  {'predictor':<22}{'intrare':<18}{'EN->EN':<10}{'EN->RO':<10}{'pastrat':<9}")
 for label, source, transfer in [
     ("BERT", lambda: stats(ALL_RUNS["bert"][("glide", "english")], "english", "total"),
@@ -325,8 +323,8 @@ for label, source, transfer in [
      lambda: (load_corrcnn("glide") or {}).get("evaluation", {}).get("total")),
 ]:
     a, b = source(), transfer()
-    kind = {"BERT": "doar text", "CLIP": "text + imagine",
-            "Correlation CNN": "doar imagine"}[label]
+    kind = {"BERT": 'text only', "CLIP": "text + imagine",
+            "Correlation CNN": 'image only'}[label]
     if a is None or b is None:
         add(f"  {label:<22}{kind:<18}--")
         continue
@@ -376,12 +374,12 @@ def cell(predictor, train_language, test_language, target, subset="total"):
     return (node or {}).get(subset)
 
 FULL_ROWS = [
-    ("bert", "english", "english", "  mBERT, engleza"),
+    ("bert", "english", "english", '  mBERT, pivot'),
     ("bert", "english", "romanian_reviewed", "  mBERT, EN -> RO reviz."),
     ("bert", "romanian_reviewed", "romanian_reviewed", "  mBERT, romana reviz."),
     (None, None, None, ""),
     ("clip_control", "english", "english", "  CLIP control (Long-CLIP)"),
-    ("clip", "english", "english", "  CLIP XLM-R, engleza"),
+    ("clip", "english", "english", '  CLIP XLM-R, pivot'),
     ("clip", "english", "romanian_reviewed", "  CLIP XLM-R, EN -> RO reviz."),
     ("clip", "romanian_reviewed", "romanian_reviewed", "  CLIP XLM-R, romana reviz."),
     (None, None, None, ""),
@@ -394,8 +392,8 @@ add("=" * 130)
 add("TABELUL 3 COMPLET -- toti predictorii, ambele task-uri, subset total")
 add("=" * 130)
 add("Controalele (Long-CLIP) reproduc encoderul din paper. Correlation CNN nu")
-add("primeste textul promptului, deci are un singur rand: cifrele lui sunt")
-add("identice pentru orice limba.")
+add('receive the prompt text, so it has a single row: in its')
+add('identical for any language.')
 add("")
 add(" " * 32 + "".join(f"{model + ' ' + measure:>18}" for _, model, measure in MAIN_COLUMNS))
 add(" " * 32 + "".join("  Pearson  Kendall" for _ in MAIN_COLUMNS))
@@ -423,11 +421,11 @@ for predictor, train_language, test_language, label in FULL_ROWS:
                     f"{metrics['kendall']:>8.3f}{mark(metrics['kendall_p'])}")
     add(row)
 add("")
-add("Sensibilitatea la traducere, dupa ponderea textului in intrare:")
+add('Sensitivity to translation, by the weight of text in the input:')
 add(f"  {'predictor':<20}{'intrare':<18}{'tinta':<12}{'EN->EN':<10}{'EN->RO':<10}{'pastrat':<9}")
-for predictor, name, kind in [("bert", "mBERT", "doar text"),
+for predictor, name, kind in [("bert", "mBERT", 'text only'),
                               ("clip", "CLIP XLM-R", "text + imagine"),
-                              ("corrcnn", "Correlation CNN", "doar imagine")]:
+                              ("corrcnn", "Correlation CNN", 'image only')]:
     for target in ["glide", "clip_p10", "blip2_p10"]:
         source = cell(predictor, "english", "english", target)
         transfer = cell(predictor, "english", "romanian_reviewed", target)
@@ -458,7 +456,7 @@ for train_language, test_language, label in ROW_SPECS:
 add("")
 add("")
 add("-" * 130)
-add("TRANSFER CROSS-LINGV (subset: total) -- rand = limba de antrenare, coloana = limba de test")
+add('CROSS-LINGUAL TRANSFER (subset: total) -- row = training language, column = test language')
 add("-" * 130)
 for target, model, measure in MAIN_COLUMNS:
     add("")
@@ -496,9 +494,9 @@ transfer_tests = {}
 add("")
 add("")
 add("-" * 130)
-add("DEGRADAREA LA TRANSFER: engleza in-limba vs. engleza -> romana revizuita")
+add('TRANSFER DEGRADATION: pivot in-language vs. pivot applied to the translation')
 add("-" * 130)
-add("Test Steiger pe corelatii dependente (acelasi set de test, aceleasi etichete).")
+add('Steiger test for dependent correlations (same test set, same labels).')
 add("")
 add(f"  {'tinta':<14}{'EN->EN':<10}{'EN->RO rev':<13}{'pastrat':<10}{'z':<9}{'p':<11}")
 for target, model, measure in MAIN_COLUMNS:
@@ -525,12 +523,12 @@ for target, model, measure in MAIN_COLUMNS:
         "steiger_p": p,
     }
 add("")
-add("  Un p mic inseamna ca pierderea la transfer e reala, nu zgomot de esantionare.")
+add('  A small p means the transfer loss is real, not sampling noise.')
 
 add("")
 add("")
 add("-" * 130)
-add("PROVENIENTA")
+add('PROVENANCE')
 add("-" * 130)
 add(f"  {'rulare':<30}{'grila':<8}{'lr':<10}{'wd':<8}{'epoca':<8}{'val MSE':<12}{'precizie':<10}")
 for (target, language), run in sorted(RUNS.items()):
@@ -565,7 +563,7 @@ export = {
     "paper_baseline": {
         "backbone": "bert-base-cased",
         "language": "english",
-        "note": "toate valorile marcate ‡ (p < 0.001) in paper",
+        "note": 'all values marked ‡ (p < 0.001) in the paper',
         "values": {
             target: {"pearson": pearson, "kendall": kendall}
             for target, (pearson, kendall) in PAPER_BASELINE.items()
@@ -579,7 +577,7 @@ export = {
     "degenerate_subsets": {
         "drawbench": {
             "targets": sorted(target for _, target in DEGENERATE),
-            "reason": "95-97% dintre tinte sunt exact zero; corelatiile nu sunt interpretabile",
+            "reason": '95-97% of targets are exactly zero; the correlations are not interpretable',
         }
     },
     "runs": {},
@@ -760,7 +758,7 @@ for predictor_key, target, model_name, measure, train_language in [
     for t, m, ms in MAIN_COLUMNS
     for l in TRAIN_LANGUAGES
 ]:
-    task = "generare" if target in ("glide", "sdxl") else "regasire"
+    task = "generare" if target in ("glide", "sdxl") else 'retrieval'
     if True:
         run = ALL_RUNS[predictor_key][(target, train_language)]
         if run is None:

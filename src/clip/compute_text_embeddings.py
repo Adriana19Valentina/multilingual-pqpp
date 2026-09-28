@@ -71,14 +71,14 @@ if os.path.exists(image_path):
             "split": images["split"].astype(str),
         }
     ).drop_duplicates("prompt_index").sort_values("prompt_index")
-    assert len(image_keys) == len(data), "numar de prompturi diferit fata de imagini"
+    assert len(image_keys) == len(data), 'prompt count differs from the images'
     assert (image_keys["prompt_key"].to_numpy() == data["prompt_key"].to_numpy()).all(), (
-        "ordinea prompturilor nu se potriveste cu fisierul de imagini"
+        'prompt order does not match the image file'
     )
     assert (image_keys["split"].to_numpy() == data["split"].to_numpy()).all()
     print("aliniere cu image_embeddings verificata")
 else:
-    print("ATENTIE: image_embeddings lipseste, alinierea nu poate fi verificata")
+    print('WARNING: image_embeddings is missing; alignment cannot be verified')
 
 def encode(texts):
     outputs = []
@@ -106,7 +106,7 @@ for language, column in LANGUAGE_COLUMNS.items():
 
 english = arrays["text_english"]
 english_unit = english / np.linalg.norm(english, axis=1, keepdims=True)
-print("\naliniere fata de engleza (cosinus mediu, primele 1000 de prompturi):")
+print('\nalignment against the pivot (mean cosine, first 1000 prompts):')
 for language in LANGUAGE_COLUMNS:
     if language == "english":
         continue
@@ -132,8 +132,7 @@ manifest = {
     },
     "languages": LANGUAGE_COLUMNS,
     "prompts": int(len(data)),
-    "alignment_key": "prompt_index -- acelasi ca in image_embeddings; randul i din "
-    "text_<limba> corespunde celor 4 imagini cu prompt_index == i",
+    "alignment_key": 'prompt_index, the same as in image_embeddings; row i of text_<language> corresponds to the 4 images with prompt_index == i',
 }
 manifest_path = os.path.join(OUT_DIR, f"text_embeddings_{TAG}.manifest.json")
 with open(manifest_path, "w") as handle:

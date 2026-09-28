@@ -15,15 +15,15 @@ ROWS = [
     ("PQPP paper (Long-CLIP)", None, "PAPER", None),
     ("control Long-CLIP, agregare a", "clip_retrieval_longclip-b", "retrieval__english", "english"),
     ("control Long-CLIP, agregare b", "clip_retrieval_longclip-b", "retrieval__english__b", "english"),
-    ("XLM-R, concat, agregare a", "clip_retrieval", "retrieval__english", "english"),
-    ("XLM-R, concat, agregare b", "clip_retrieval", "retrieval__english__b", "english"),
+    ('XLM-R, concat, aggregation a', "clip_retrieval", "retrieval__english", "english"),
+    ('XLM-R, concat, aggregation b', "clip_retrieval", "retrieval__english__b", "english"),
 
     ("— trasaturi de interactiune —", None, None, None),
     ("interactiune, EN → EN", "clip_retrieval", "retrieval__english__b__inter", "english"),
     ("interactiune, EN → RO", "clip_retrieval", "retrieval__english__b__inter", "romanian_reviewed"),
     ("interactiune, RO → RO", "clip_retrieval", "retrieval__romanian_reviewed__b__inter", "romanian_reviewed"),
 
-    ("— turn de text antrenabil —", None, None, None),
+    ('— trainable text tower —', None, None, None),
     ("inter + turn text, EN → EN", "clip_retrieval", "retrieval__english__b__inter__tt", "english"),
     ("inter + turn text, EN → RO", "clip_retrieval", "retrieval__english__b__inter__tt", "romanian_reviewed"),
     ("inter + turn text, RO → RO (secv.)", "clip_retrieval",
@@ -80,13 +80,13 @@ def cells(directory, name, language):
 lines = []
 add = lines.append
 add("=" * 92)
-add("Predictor post-regasire: variantele testate")
+add('Post-retrieval predictor: variants tested')
 add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 92)
 add("")
-add("Encoder XLM-R ViT-B/32 (inghetat, daca nu se spune altfel). Listele de")
-add("regasire sunt reconstruite si validate contra tintelor publicate.")
-add("EN → RO inseamna: antrenat pe engleza, testat pe romana revizuita.")
+add('Encoder XLM-R ViT-B/32 (frozen unless stated otherwise). The retrieval')
+add('retrieval lists are reconstructed and validated against published targets.')
+add('pivot -> target means: trained on the pivot language, tested on the translation.')
 add("")
 add(f"{'varianta':<38}" + "".join(f"{LABELS[t]:>13}" for t in T))
 add("-" * 92)
@@ -115,7 +115,7 @@ for t in T:
     add(f"  {LABELS[t]:<14}{number(best['cells'][t]):>8}   {best['label']}")
 
 add("")
-add("Castigul fata de codul original (concat, agregare a, doar engleza):")
+add('Gain over the original code (concat, aggregation a, pivot only):')
 baseline = next((r for r in table if r["run"] == "retrieval__english"
                  and r["test_language"] == "english"), None)
 if baseline:
@@ -127,7 +127,7 @@ if baseline:
 
 if missing:
     add("")
-    add("Randuri lipsa:")
+    add('Missing rows:')
     for label, problem in missing:
         add(f"  {label} — {problem}")
 
@@ -135,7 +135,7 @@ text_path = os.path.join(RESULTS_DIR, "retrieval_variants.txt")
 with open(text_path, "w") as handle:
     handle.write("\n".join(lines) + "\n")
 
-tsv = [["Varianta", "Limba test"] + [LABELS[t] for t in T]]
+tsv = [['Variant', 'Test language'] + [LABELS[t] for t in T]]
 for row in table:
     tsv.append([row["label"], row["test_language"] or ""]
                + [number(row["cells"].get(t)) for t in T])

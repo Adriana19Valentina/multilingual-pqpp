@@ -6,6 +6,10 @@ data/all/
 
 # Embeddings precalculate (se regenereaza; zeci de GB)
 data/clip_embeddings/
+# ... cu excepția listelor de regăsire, care sunt mici si esentiale
+!data/clip_embeddings/retrieval_lists_*
+!data/clip_embeddings/retrieved_image_ids.json
+!data/clip_embeddings/test2017_ids.txt
 *.npy
 data/**/corpus_embeddings_*.npz
 data/**/image_embeddings_*.npz
@@ -24,3 +28,6 @@ __pycache__/
 *.py[cod]
 .~lock.*#
 .ipynb_checkpoints/
+
+# Arhive pentru Release (prea mari pentru git; vezi README)
+artifacts/

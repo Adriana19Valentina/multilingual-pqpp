@@ -137,7 +137,7 @@ overall = float(np.mean([v["exact_match"] for v in report.values()]))
 print(f"\npotrivire exacta, medie: {overall:.1%}")
 
 if overall < 0.95:
-    raise SystemExit("Validarea a picat; listele nu se salveaza.")
+    raise SystemExit('Validation failed; the lists are not saved.')
 
 out = os.path.join(EMBED_DIR, "retrieval_lists_clip.npz")
 np.savez_compressed(out, **{f"{s}_top{TOP_K}": v for s, v in lists.items()},
@@ -147,8 +147,7 @@ with open(os.path.join(EMBED_DIR, "retrieval_lists_clip.manifest.json"), "w") as
         {"model": MODEL_ID, "library": "transformers (preprocesare CLIPImageProcessor)",
          "corpus": "MS COCO train2017, 118287 imagini", "top_k": TOP_K,
          "validation": report, "overall_exact_match": overall,
-         "note": "embeddings-urile de query din retrieval_process/clip/ sunt "
-                 "Long-CLIP-L si NU corespund benchmarkului"},
+         "note": 'the query embeddings in retrieval_process/clip/ are Long-CLIP-L and do NOT correspond to the benchmark'},
         handle, indent=2, ensure_ascii=False,
     )
 print(f"scris: {os.path.relpath(out, HERE)}")

@@ -30,17 +30,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--target", required=True, choices=sorted(TARGETS))
 parser.add_argument(
     "--matrix", default="dims", choices=["dims", "images", "text-images", "multiling"],
-    help="'dims' reproduce codul original: np.corrcoef(embeddings.T), adica "
-    "corelatii intre cele 512 DIMENSIUNI, estimate din cate 4 observatii -- "
-    "o matrice 512x512 cu rang <= 3. 'images' implementeaza ce DESCRIE paperul: "
-    "cosinus intre fiecare pereche de IMAGINI, adica o matrice 4x4 (sau 25x25 pe "
-    "regasire), bine conditionata. "
-    "'text-images' adauga promptul ca al 5-lea element: matricea devine 5x5 si "
-    "ultima linie contine similaritatea text-imagine -- semnalul nativ al lui "
-    "CLIP, pe care metoda originala il arunca. "
-    "'multiling' pune DOUA versiuni ale promptului (engleza si romana) ca "
-    "elemente separate: 6x6. Dezacordul dintre limbi devine trasatura -- daca "
-    "traducerea se aliniaza altfel cu imaginile, promptul e probabil ambiguu.")
+    help="'dims' reproduces the original code: np.corrcoef(embeddings.T), i.e. correlations between the 512 DIMENSIONS, each estimated from only 4 observations, giving a 512x512 matrix of rank at most 3. 'images' implements what the paper DESCRIBES: cosine between every pair of IMAGES, a 4x4 matrix on generation or 25x25 on retrieval, well conditioned. 'text-images' adds the prompt as a fifth element, so the matrix becomes 5x5 and its last row holds text-image similarity, the native CLIP signal that the original method discards. 'multiling' places two versions of the prompt as separate elements, giving 6x6, so disagreement between languages becomes a feature: if a translation aligns differently with the images, the prompt is probably ambiguous.")
 parser.add_argument(
     "--embed-tag", default="longclip-b",
     help="encoderul de imagine. 'longclip-b' = cel din paper; "
@@ -100,7 +90,7 @@ grouped = torch.from_numpy(image_npz["embeddings"][rows_by_prompt.reshape(-1)]).
 )
 if TEXT_ITEMS:
     assert (text_npz["prompt_key"].astype(str) == prompts["prompt_key"].to_numpy()).all(),\
-        "embeddings-urile de text nu sunt aliniate cu splitul"
+        'text embeddings are not aligned with the split'
     texts = torch.from_numpy(
         np.stack([text_npz[c] for c in TEXT_COLUMNS], axis=1).astype(np.float32))
     grouped = torch.cat([texts, grouped], dim=1)
@@ -253,8 +243,7 @@ results = {
     "target_column": TARGET_COLUMN, "target_family": "generative",
     "image_encoder": TAG,
     "language_independent": True,
-    "note": "predictorul nu foloseste textul promptului; rezultatul e identic "
-            "pentru orice limba",
+    "note": 'the predictor does not use the prompt text; the result is identical for any language',
     "grid_complete": len(grid_results) == 9,
     "param_grid": PARAM_GRID, "num_epochs": NUM_EPOCHS,
     "best_config": best_config,

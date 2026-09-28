@@ -23,7 +23,7 @@ SEARCH_DEPTH = 2000
 parser = argparse.ArgumentParser()
 parser.add_argument("--system", required=True, choices=["clip", "blip2"])
 parser.add_argument("--top-k", type=int, default=100,
-                    help="cate id-uri si scoruri se salveaza per query")
+                    help='ids and scores saved per query')
 parser.add_argument("--precision-at", type=int, default=10)
 args = parser.parse_args()
 
@@ -178,7 +178,7 @@ with open(os.path.join(OUT_DIR, f"{args.system}_english.manifest.json"), "w") as
                   if args.system == "clip"
                   else "LAVIS blip2_feature_extractor / pretrain_vitL, spatiu 768"),
         "corpus": "MS COCO train2017, 118287 imagini",
-        "prompts": "toate cele 10200, in engleza",
+        "prompts": 'all 10200, in the pivot language',
         "top_k_saved": args.top_k, "search_depth_for_rr": SEARCH_DEPTH,
         "validation": report, "overall_exact_match": overall,
     }, handle, indent=2, ensure_ascii=False)

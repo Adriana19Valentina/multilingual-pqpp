@@ -192,7 +192,7 @@ with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
     json.dump({"run": RUN, "predictor": "correlation_cnn_retrieval",
                "target": args.target, "system": SYSTEM, "metric": METRIC,
                "image_encoder": args.encoder, "language_independent": True,
-               "note": "nu foloseste textul query-ului; rezultat identic pentru orice limba",
+               "note": 'does not use the query text; identical result for any language',
                "grid_complete": len(grid) == 9, "param_grid": PARAM_GRID,
                "num_epochs": NUM_EPOCHS, "best_config": best_config,
                "evaluation": entry}, handle, indent=2, ensure_ascii=False)

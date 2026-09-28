@@ -158,7 +158,7 @@ overall = float(np.mean([v["exact_match"] for v in report.values()]))
 print(f"\npotrivire exacta, medie: {overall:.1%}")
 
 if overall < 0.95:
-    raise SystemExit("Validarea a picat; listele nu se salveaza.")
+    raise SystemExit('Validation failed; the lists are not saved.')
 
 out = os.path.join(EMBED_DIR, "retrieval_lists_blip2.npz")
 np.savez_compressed(out, **{f"{s}_top{TOP_K}": v for s, v in lists.items()})

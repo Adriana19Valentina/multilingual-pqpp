@@ -35,26 +35,20 @@ parser.add_argument("--language", required=True, choices=ALL_LANGUAGES)
 parser.add_argument(
     "--embed-tag",
     default=DEFAULT_TAG,
-    help="ce set de embeddings se foloseste. Implicit cel multilingv; "
-    "'longclip-b' e modelul de control din paper (doar engleza).",
+    help="which embedding set to use; multilingual by default, 'longclip-b' being the monolingual control model from the paper",
 )
 parser.add_argument("--target", required=True, choices=sorted(TARGETS))
 parser.add_argument(
     "--normalize",
     default="none",
     choices=["l2", "none"],
-    help="'none' (implicit) concateneaza embeddings-urile brute, ca in codul "
-    "original. Desi imaginea are norma ~17.3 si textul ~0.53 -- un raport de "
-    "33x care parea sa dezechilibreze intrarea -- masuratoarea arata contrariul: "
-    "pe GLIDE/engleza, 'none' da Pearson 0.663 fata de 0.644 cu 'l2'. Norma "
-    "vectorilor CLIP pare sa poarte semnal pe care normalizarea il sterge.",
+    help="'none' (default) concatenates raw embeddings, as in the original code. The image norm is ~17.3 and the text norm ~0.53, a 33x ratio that looks like it would unbalance the input, but measurement shows the opposite: on GLIDE in the pivot language 'none' gives Pearson 0.663 against 0.644 with 'l2'. The vector norms appear to carry signal that normalization erases.",
 )
 parser.add_argument(
     "--images",
     default="all",
     choices=["all", "target"],
-    help="'all' foloseste toate cele 4 imagini pentru orice tinta, ca in codul "
-    "original; 'target' doar cele 2 ale modelului prezis.",
+    help="'all' uses all 4 images for any target, as in the original code; 'target' only the 2 from the predicted model",
 )
 args = parser.parse_args()
 
@@ -270,7 +264,7 @@ for language in LANGUAGES:
     predictions_raw = predictions * 3 - 1
 
     entry = {
-        "setting": "in-limba" if language == args.language else "transfer zero-shot",
+        "setting": 'in-language' if language == args.language else "transfer zero-shot",
         "total": metrics_for(true_raw, predictions_raw, true_norm, predictions),
     }
     for source in test_prompts["source"].unique():
