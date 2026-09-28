@@ -1,8 +1,8 @@
 {
-  "generated": "2026-09-22T09:45:13",
+  "generated": "2026-09-28T08:32:30",
   "predictor": "correlation CNN",
   "language_independent": true,
-  "note": "nu foloseste textul promptului; rezultatele sunt identice in orice limba",
+  "note": "does not use the prompt text; results are identical in any language",
   "image_encoder": "longclip-b",
   "paper_baseline": {
     "glide": {
@@ -31,17 +31,17 @@
     }
   },
   "setup": {
-    "generare": {
+    "generation": {
       "images": 4,
       "note": "2 SDXL + 2 GLIDE",
-      "conv": "3 straturi (16-64)",
+      "conv": "3 layers (16-64)",
       "fc1": "262144 -> 512",
       "out": "sigmoid"
     },
-    "regasire": {
+    "retrieval": {
       "images": 25,
-      "note": "top-25 ale sistemului prezis",
-      "conv": "4 straturi (32-64)",
+      "note": "top-25 of the predicted system",
+      "conv": "4 layers (32-64)",
       "fc1": "65536 -> 1024",
       "out": "ReLU"
     }

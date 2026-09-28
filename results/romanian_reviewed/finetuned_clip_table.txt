@@ -1,0 +1,48 @@
+======================================================================================================================
+Fine-tuned CLIP -- post-generation / post-retrieval predictor
+generated: 2026-09-28 08:32
+======================================================================================================================
+
+CLIP is frozen; only the 1024-512-256-1 MLP head is trained, over
+[text(512) ; image(512)]. Training on a translation therefore means training
+the head on translated embeddings, not adapting the encoder to that language.
+
+Generation: 4 images per prompt, predictions averaged. Retrieval: 25+25
+images per query, binary classification, then aggregation into P@10 / RR.
+The retrieval lists are reconstructed (the originals were never published).
+
+‡ p < 0.001   † p < 0.01   -- against the random baseline
+
+                                          GLIDE HBPP           SDXL HBPP           CLIP P@10             CLIP RR         BLIP-2 P@10           BLIP-2 RR
+                                   Pearson   Kendall   Pearson   Kendall   Pearson   Kendall   Pearson   Kendall   Pearson   Kendall   Pearson   Kendall
+                                          generation          generation           retrieval           retrieval           retrieval           retrieval
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+PQPP paper (Long-CLIP)              0.649‡    0.474‡    0.380‡    0.246‡    0.473‡    0.299‡    0.200‡    0.149‡    0.498‡    0.358‡    0.166‡    0.150‡
+  (the paper reports 3 decimals; the rest of the table has 5)
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+Control (Long-CLIP), pivot        0.64848‡  0.47412‡  0.38161‡  0.25262‡  0.43697‡  0.32987‡  0.13922‡  0.13131‡  0.49211‡  0.40763‡  0.10550‡  0.13384‡
+  ^ delta control vs paper        -0.00052   0.00012   0.00161   0.00662  -0.03603   0.03087  -0.06078  -0.01769  -0.00589   0.04963  -0.06050  -0.01616
+
+XLM-R, pivot                      0.66331‡  0.48560‡  0.34651‡  0.22832‡  0.37553‡  0.26317‡  0.07148†  0.06342‡  0.43937‡  0.33833‡  0.02598   0.04300 
+  pivot -> target (raw MT)        0.66014‡  0.48235‡  0.32107‡  0.21201‡  0.37555‡  0.26207‡  0.10372‡  0.08914‡  0.42074‡  0.31900‡  0.03689   0.06060‡
+  pivot -> target                 0.65978‡  0.48200‡  0.32086‡  0.21203‡  0.36916‡  0.25628‡  0.10036‡  0.08309‡  0.40991‡  0.31011‡  0.02981   0.05488†
+XLM-R, target language            0.66032‡  0.48249‡  0.32795‡  0.21781‡  0.35165‡  0.24610‡  0.09209‡  0.07719‡  0.38864‡  0.29496‡  0.01613   0.03711 
+  target -> pivot                 0.66197‡  0.48424‡  0.33440‡  0.22227‡  0.32927‡  0.22966‡  0.05600   0.05056†  0.38743‡  0.29704‡ -0.00031   0.01139 
+
+Degradation under translation (pivot in-language -> pivot applied to the translation):
+  target      piv->piv    piv->tgt    kept      
+  glide       0.66331     0.65978     99.5%     
+  sdxl        0.34651     0.32086     92.6%     
+  clip_p10    0.37553     0.36916     98.3%     
+  clip_rr     0.07148     0.10036     140.4%    
+  blip2_p10   0.43937     0.40991     93.3%     
+  blip2_rr    0.02598     0.02981     114.7%    
+
+In-language training vs zero-shot transfer, both tested on the target language:
+  target      piv->tgt    tgt->tgt    delta       
+  glide       0.65978     0.66032     0.00054     
+  sdxl        0.32086     0.32795     0.00710     
+  clip_p10    0.36916     0.35165     -0.01751    
+  clip_rr     0.10036     0.09209     -0.00827    
+  blip2_p10   0.40991     0.38864     -0.02127    
+  blip2_rr    0.02981     0.01613     -0.01368    

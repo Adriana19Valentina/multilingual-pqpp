@@ -9,7 +9,11 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.DATA_DIR
 
 ENCODERS = {
     "xlmr-vitb32": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
@@ -24,9 +28,9 @@ _cli = _parser.parse_args()
 TAG = _cli.encoder
 MODEL_NAME, PRETRAINED = ENCODERS[TAG]
 
-MSCOCO_DIR = os.path.join(HERE, "images")
-DRAWBENCH_DIR = os.path.join(HERE, "drawbench_images")
-OUT_DIR = os.path.join(HERE, "clip_embeddings")
+MSCOCO_DIR = languages.IMAGES_DIR
+DRAWBENCH_DIR = languages.DRAWBENCH_DIR
+OUT_DIR = languages.EMBED_DIR
 
 SPLIT_FILES = {
     "train": "pqpp_multilingual_train.csv",
@@ -84,15 +88,15 @@ index = pd.DataFrame(index_rows)
 index["prompt_index"] = index.groupby(["split", "prompt_key"], sort=False).ngroup()
 
 groups = index.groupby("prompt_index").size()
-assert (groups == 4).all(), f"prompturi cu alt numar de imagini: {groups[groups != 4]}"
-print(f"imagini de procesat: {len(index)}  ({len(groups)} prompturi x 4)")
+assert (groups == 4).all(), f"prompts with a different image count: {groups[groups != 4]}"
+print(f"images to process: {len(index)}  ({len(groups)} prompts x 4)")
 print(index.groupby(["source", "generator"]).size().to_string())
 
 missing = [path for path in index["path"] if not os.path.exists(path)]
 if missing:
     raise SystemExit(
-        f"lipsesc {len(missing)} imagini, prima: {missing[0]}\n"
-        f"Verifica {MSCOCO_DIR} si {DRAWBENCH_DIR}."
+        f"missing {len(missing)} images, first: {missing[0]}\n"
+        f"Check {MSCOCO_DIR} and {DRAWBENCH_DIR}."
     )
 print('all files present\n')
 
@@ -133,11 +137,11 @@ with torch.no_grad():
             print(f"  {done}/{len(index)}  ({100 * done / len(index):.0f}%)", flush=True)
 
 embeddings = np.concatenate(chunks).astype(np.float32)
-assert embeddings.shape[0] == len(index), "numar de embeddings diferit de index"
+assert embeddings.shape[0] == len(index), "number of embeddings differs from the index"
 print(f"\nembeddings: {embeddings.shape}  {embeddings.nbytes / 2**20:.0f} MiB")
 
 norms = np.linalg.norm(embeddings, axis=1)
-print(f"norma L2: min={norms.min():.2f} mean={norms.mean():.2f} max={norms.max():.2f}")
+print(f"L2 norm: min={norms.min():.2f} mean={norms.mean():.2f} max={norms.max():.2f}")
 
 npz_path = os.path.join(OUT_DIR, f"image_embeddings_{TAG}.npz")
 np.savez_compressed(
@@ -179,7 +183,7 @@ manifest = {
     "usage": {
         "text_embeddings": 'MUST be produced with the same model and pretrained version; a different CLIP lives in a different embedding space',
         "predictor": 'concatenate [text(512) ; image(512)] -> MLP 1024-512-256-1; CLIP stays frozen',
-        "aggregation": "la test, mediaza cele 4 predictii ale unui prompt",
+        "aggregation": "at test time, average the 4 predictions of a prompt",
     },
 }
 manifest_path = os.path.join(OUT_DIR, f"image_embeddings_{TAG}.manifest.json")
@@ -187,5 +191,5 @@ with open(manifest_path, "w") as handle:
     json.dump(manifest, handle, indent=2, ensure_ascii=False)
 
 size_mb = os.path.getsize(npz_path) / 2**20
-print(f"\nscris: {os.path.relpath(npz_path, HERE)}  ({size_mb:.0f} MiB)")
-print(f"scris: {os.path.relpath(manifest_path, HERE)}")
+print(f"\nwrote: {os.path.relpath(npz_path, HERE)}  ({size_mb:.0f} MiB)")
+print(f"wrote: {os.path.relpath(manifest_path, HERE)}")

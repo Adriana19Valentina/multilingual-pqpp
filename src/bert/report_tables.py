@@ -2,17 +2,21 @@ import argparse
 import json
 import os
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(HERE, "results")
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
 
-LANGUAGES = ["english", "romanian", "romanian_reviewed"]
-LANGUAGE_LABELS = {
-    "english": "English",
-    "romanian": "Romanian (raw MT)",
-    "romanian_reviewed": "Romanian (reviewed)",
-}
+PIVOT = languages.PIVOT
+TARGET = languages.TARGET_LANGUAGE
+RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
-TRAIN_LANGUAGES = ["english", "romanian_reviewed"]
+HERE = languages.REPO
+RESULTS_DIR = languages.RESULTS_DIR
+
+LANGUAGES = [l for l in (PIVOT, RAW_TARGET, TARGET) if l]
+LANGUAGE_LABELS = {l: languages.LABELS.get(l, l) for l in LANGUAGES}
+
+TRAIN_LANGUAGES = [PIVOT, TARGET]
 
 MAIN_COLUMNS = [
     ("glide", "GLIDE", "HBPP"),
@@ -90,7 +94,7 @@ if args.table == "main":
     )
     header_stat = " " * 22 + "".join("  Pearson  Kendall" for _ in MAIN_COLUMNS)
 
-    print(f"\nTabelul 3 (multilingv) -- subset: {args.subset}, evaluare in-limba\n")
+    print(f"\nTable 3 (multilingual) -- subset: {args.subset}, in-language evaluation\n")
     print(header_model)
     print(header_measure)
     print(header_stat)
@@ -114,7 +118,7 @@ if args.table == "main":
             if result is None:
                 missing.append(f"{target}__{language}")
             elif not result.get("grid_complete", True):
-                missing.append(f"{target}__{language} (grila incompleta)")
+                missing.append(f"{target}__{language} (incomplete grid)")
             pearson = cell(result, language, "pearson")
             kendall = cell(result, language, "kendall")
             line += render(pearson, 9) + render(kendall, 9)
@@ -122,7 +126,7 @@ if args.table == "main":
         print(line)
         rows.append((LANGUAGE_LABELS[language], latex_cells))
 
-        if show_baseline and language == "english":
+        if show_baseline and language == PIVOT:
             delta = f"{'  ^ delta vs paper':<22}"
             for target, _, _ in MAIN_COLUMNS:
                 result = load(target, language)
@@ -141,8 +145,8 @@ if args.table == "main":
 
 else:
     print(
-        f"\nTransfer cross-lingv -- tinta: {args.target}, subset: {args.subset}\n"
-        f"randuri = limba de antrenare, coloane = limba de test\n"
+        f"\nCross-lingual transfer -- target: {args.target}, subset: {args.subset}\n"
+        f"rows = training language, columns = test language\n"
     )
     header = " " * 22 + "".join(f"{LANGUAGE_LABELS[l]:>20}" for l in LANGUAGES)
     print(header)
@@ -154,7 +158,7 @@ else:
         if result is None:
             missing.append(f"{args.target}__{train_language}")
         elif not result.get("grid_complete", True):
-            missing.append(f"{args.target}__{train_language} (grila incompleta)")
+            missing.append(f"{args.target}__{train_language} (incomplete grid)")
         line = f"{LANGUAGE_LABELS[train_language]:<22}"
         for test_language in LANGUAGES:
             line += render(cell(result, test_language, "pearson"), 10)
@@ -167,11 +171,11 @@ if missing:
     print(f"\nDe rulat ({len(missing)}):")
     for run in sorted(set(missing)):
         target, _, language = run.partition("__")
-        note = " (grila incompleta -- reia)" if "incompleta" in language else ""
+        note = " (incomplete grid -- rerun)" if "incompleta" in language else ""
         language = language.split(" ")[0]
         print(
             f"  python3 finetunedbert_multilingual.py "
             f"--language {language} --target {target}{note}"
         )
 else:
-    print("\nToate celulele sunt rulate.")
+    print("\nEvery cell has been run.")

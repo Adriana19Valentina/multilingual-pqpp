@@ -1,13 +1,14 @@
-# Imagini si corpusuri (se descarca separat, vezi README)
+# Images and corpora (downloaded separately, see README)
 data/images/
 data/drawbench_images/
 data/all/
 *.zip
 
-# Embeddings precalculate (se regenereaza; zeci de GB)
-data/clip_embeddings/
-# ... cu excepția listelor de regăsire, care sunt mici si esentiale
+# Precomputed embeddings (regenerated; tens of GB)
+data/clip_embeddings/*
+# ... except the retrieval lists and labels, which are small and essential
 !data/clip_embeddings/retrieval_lists_*
+!data/clip_embeddings/retrieval_labels.npz
 !data/clip_embeddings/retrieved_image_ids.json
 !data/clip_embeddings/test2017_ids.txt
 *.npy
@@ -16,12 +17,12 @@ data/**/image_embeddings_*.npz
 data/**/text_embeddings_*.npz
 data/**/retrieved_image_embeddings_*.npz
 
-# Greutati antrenate
+# Trained weights
 *.pth
 *.pt
 checkpoints/
 
-# Loguri si temporare
+# Logs and temporaries
 logs/
 *.log
 __pycache__/
@@ -29,5 +30,5 @@ __pycache__/
 .~lock.*#
 .ipynb_checkpoints/
 
-# Arhive pentru Release (prea mari pentru git; vezi README)
+# Release archives (too large for git; see README)
 artifacts/

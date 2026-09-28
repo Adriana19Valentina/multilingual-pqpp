@@ -10,23 +10,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
 
 TARGETS = {
-    "clip_p10": ("clip", "precision"),
-    "clip_rr": ("clip", "reciprocal_rank"),
-    "blip2_p10": ("blip2", "precision"),
-    "blip2_rr": ("blip2", "reciprocal_rank"),
+    "clip_p10": ("clip", "P@10", "p10_clip"),
+    "clip_rr": ("clip", "RR", "rr_clip"),
+    "blip2_p10": ("blip2", "P@10", "p10_blip2"),
+    "blip2_rr": ("blip2", "RR", "rr_blip2"),
 }
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
+SPLIT_FILES = languages.SPLIT_FILES
 TOP_K = 25
 PARAM_GRID = {"learning_rate": [1e-5, 1e-4, 5e-5], "weight_decay": [0, 0.1, 0.01]}
 NUM_EPOCHS = 25
@@ -38,10 +35,10 @@ parser.add_argument("--target", required=True, choices=sorted(TARGETS))
 parser.add_argument("--encoder", default="longclip-b", choices=["longclip-b", "xlmr-vitb32"])
 args = parser.parse_args()
 
-SYSTEM, METRIC = TARGETS[args.target]
+SYSTEM, METRIC, TARGET_COLUMN = TARGETS[args.target]
 RUN = f"{args.target}__{args.encoder}"
-RESULTS_DIR = os.path.join(HERE, "results", "corrcnn_retrieval")
-PREDICTIONS_DIR = os.path.join(HERE, "predictions", "corrcnn_retrieval")
+RESULTS_DIR = os.path.join(languages.RESULTS_DIR, "corrcnn_retrieval")
+PREDICTIONS_DIR = os.path.join(languages.PREDICTIONS_DIR, "corrcnn_retrieval")
 for directory in [RESULTS_DIR, PREDICTIONS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
@@ -61,18 +58,16 @@ retrieval_lists = np.load(os.path.join(EMBED_DIR, f"retrieval_lists_{SYSTEM}.npz
 frames, targets, grouped = {}, {}, {}
 for split, filename in SPLIT_FILES.items():
     frames[split] = pd.read_csv(os.path.join(DATA_DIR, filename))
-    reference = pd.read_csv(
-        os.path.join(GT_DIR, SYSTEM, f"{SYSTEM}_retrieval_{split}_results.csv")
-    )
-    targets[split] = torch.from_numpy(reference[METRIC].to_numpy()).float()
+    targets[split] = torch.from_numpy(
+        frames[split][TARGET_COLUMN].to_numpy()).float()
     rows = np.array([
         [row_of_image[int(i)] for i in query_row]
         for query_row in retrieval_lists[f"{split}_top{TOP_K}"]
     ])
     grouped[split] = image_features[rows.reshape(-1)].view(len(rows), TOP_K, -1)
 
-print(f"run={RUN}  sistem={SYSTEM}  metrica={METRIC}  (fara text)")
-print(f"  train={tuple(grouped['train'].shape)}  tinta medie={targets['train'].mean():.4f}")
+print(f"run={RUN}  system={SYSTEM}  metric={METRIC}  (no text input)")
+print(f"  train={tuple(grouped['train'].shape)}  mean target={targets['train'].mean():.4f}")
 
 def correlation_matrices(batch):
     x = batch.transpose(1, 2)
@@ -142,14 +137,14 @@ for lr in PARAM_GRID["learning_rate"]:
     for decay in PARAM_GRID["weight_decay"]:
         config = train_one_config(lr, decay)
         grid.append({k: v for k, v in config.items() if k != "state_dict"})
-        print(f"  lr={lr:g} wd={decay:g}  epoca {config['epoch']:>2}  "
+        print(f"  lr={lr:g} wd={decay:g}  epoch {config['epoch']:>2}  "
               f"val_MSE={config['val_mse']:.5f}", flush=True)
         if config["val_mse"] < best_overall["val_mse"]:
             best_overall = config
 
 best_config = {k: v for k, v in best_overall.items() if k != "state_dict"}
 print(f"\nBest: lr={best_config['learning_rate']:g} wd={best_config['weight_decay']:g} "
-      f"epoca {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
+      f"epoch {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
 
 model = CNNRegressor().to(device)
 model.load_state_dict(best_overall["state_dict"])
@@ -196,4 +191,4 @@ with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
                "grid_complete": len(grid) == 9, "param_grid": PARAM_GRID,
                "num_epochs": NUM_EPOCHS, "best_config": best_config,
                "evaluation": entry}, handle, indent=2, ensure_ascii=False)
-print(f"\nrezultate -> results/corrcnn_retrieval/{RUN}.json")
+print(f"\nresults -> {os.path.relpath(os.path.join(RESULTS_DIR, RUN + '.json'), languages.REPO)}")

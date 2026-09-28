@@ -3,12 +3,20 @@ import json
 import os
 from datetime import datetime
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(HERE, "results")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+PIVOT = languages.PIVOT
+TARGET = languages.TARGET_LANGUAGE
+RAW_TARGET = languages.RAW_TARGET_LANGUAGE
+
+HERE = languages.REPO
+RESULTS_DIR = languages.RESULTS_DIR
 
 COLUMNS = [
-    ("glide", "GLIDE", "HBPP", "generare"),
-    ("sdxl", "SDXL", "HBPP", "generare"),
+    ("glide", "GLIDE", "HBPP", "generation"),
+    ("sdxl", "SDXL", "HBPP", "generation"),
     ("clip_p10", "CLIP", "P@10", 'retrieval'),
     ("clip_rr", "CLIP", "RR", 'retrieval'),
     ("blip2_p10", "BLIP-2", "P@10", 'retrieval'),
@@ -21,14 +29,14 @@ PAPER = {
     "blip2_p10": (0.498, 0.358), "blip2_rr": (0.166, 0.150),
 }
 
-ROWS = [
-    ("control", "english", "english", "Control (Long-CLIP), engleza"),
-    ("xlmr", "english", "english", "XLM-R, engleza"),
-    ("xlmr", "english", "romanian", "  EN -> RO (brut)"),
-    ("xlmr", "english", "romanian_reviewed", "  EN -> RO (revizuit)"),
-    ("xlmr", "romanian_reviewed", "romanian_reviewed", "XLM-R, romana revizuita"),
-    ("xlmr", "romanian_reviewed", "english", "  RO -> EN"),
-]
+ROWS = [row for row in [
+    ("control", PIVOT, PIVOT, "Control (Long-CLIP), pivot"),
+    ("xlmr", PIVOT, PIVOT, "XLM-R, pivot"),
+    ("xlmr", PIVOT, RAW_TARGET, "  pivot -> target (raw MT)") if RAW_TARGET else None,
+    ("xlmr", PIVOT, TARGET, "  pivot -> target"),
+    ("xlmr", TARGET, TARGET, "XLM-R, target language"),
+    ("xlmr", TARGET, PIVOT, "  target -> pivot"),
+] if row]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--decimal", default="comma", choices=["comma", "dot"])
@@ -57,7 +65,7 @@ def cell(variant, train_language, test_language, target):
         evaluations = (run or {}).get("evaluations", {})
 
         node = evaluations.get(test_language, {}).get(target) or (
-            evaluations.get(target) if test_language == "english" else None
+            evaluations.get(target) if test_language == PIVOT else None
         )
     return node.get("total") if node else None
 
@@ -74,7 +82,7 @@ lines = []
 add = lines.append
 add("=" * 118)
 add('Fine-tuned CLIP -- post-generation / post-retrieval predictor')
-add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
+add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 118)
 add("")
 add('CLIP is frozen; only the 1024-512-256-1 MLP head is trained, over')
@@ -98,7 +106,7 @@ for target, _, _, _ in COLUMNS:
     pearson, kendall = PAPER[target]
     paper_row += (f"{number(pearson, 3):>{WIDTH - 1}}‡{number(kendall, 3):>{WIDTH - 1}}‡")
 add(paper_row)
-add("  (paperul raporteaza 3 zecimale; restul tabelului are "
+add("  (the paper reports 3 decimals; the rest of the table has "
     f"{cli.decimals})")
 add("-" * (32 + 2 * WIDTH * len(COLUMNS)))
 
@@ -131,10 +139,10 @@ for variant, train_language, test_language, label in ROWS:
 
 add("")
 add('Degradation under translation (pivot in-language -> pivot applied to the translation):')
-add(f"  {'tinta':<12}{'EN->EN':<12}{'EN->RO':<12}{'pastrat':<10}")
+add(f"  {'target':<12}{'piv->piv':<12}{'piv->tgt':<12}{'kept':<10}")
 for target, _, _, _ in COLUMNS:
-    source = cell("xlmr", "english", "english", target)
-    transfer = cell("xlmr", "english", "romanian_reviewed", target)
+    source = cell("xlmr", PIVOT, PIVOT, target)
+    transfer = cell("xlmr", PIVOT, TARGET, target)
     if not source or not transfer or source["pearson"] <= 0:
         add(f"  {target:<12}--")
         continue
@@ -143,10 +151,10 @@ for target, _, _, _ in COLUMNS:
 
 add("")
 add('In-language training vs zero-shot transfer, both tested on the target language:')
-add(f"  {'tinta':<12}{'EN->RO':<12}{'RO->RO':<12}{'diferenta':<12}")
+add(f"  {'target':<12}{'piv->tgt':<12}{'tgt->tgt':<12}{'delta':<12}")
 for target, _, _, _ in COLUMNS:
-    transfer = cell("xlmr", "english", "romanian_reviewed", target)
-    in_language = cell("xlmr", "romanian_reviewed", "romanian_reviewed", target)
+    transfer = cell("xlmr", PIVOT, TARGET, target)
+    in_language = cell("xlmr", TARGET, TARGET, target)
     if not transfer or not in_language:
         add(f"  {target:<12}--")
         continue
@@ -182,6 +190,6 @@ with open(json_path, "w") as handle:
                   "label": lb, "cells": cs} for v, tr, te, lb, cs in table],
     }, handle, indent=2, ensure_ascii=False)
 
-print(f"scris: {os.path.relpath(text_path, HERE)}")
-print(f"scris: {os.path.relpath(tsv_path, HERE)}")
-print(f"scris: {os.path.relpath(json_path, HERE)}")
+print(f"wrote: {os.path.relpath(text_path, HERE)}")
+print(f"wrote: {os.path.relpath(tsv_path, HERE)}")
+print(f"wrote: {os.path.relpath(json_path, HERE)}")

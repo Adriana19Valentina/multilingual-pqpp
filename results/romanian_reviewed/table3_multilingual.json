@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-22T09:45:13",
+  "generated": "2026-09-28T08:32:30",
   "source_paper": "PQPP, arXiv 2406.04746v2, Table 3 (p. 8)",
   "split": {
     "train": 6080,
@@ -10,7 +10,7 @@
   "paper_baseline": {
     "backbone": "bert-base-cased",
     "language": "english",
-    "note": "toate valorile marcate ‡ (p < 0.001) in paper",
+    "note": "all values marked ‡ (p < 0.001) in the paper",
     "values": {
       "glide": {
         "pearson": 0.566,
@@ -40,7 +40,7 @@
   },
   "transfer_significance": {
     "comparison": "english in-language vs english -> romanian_reviewed (zero-shot)",
-    "test": "Steiger/Williams, corelatii dependente",
+    "test": "Steiger/Williams, dependent correlations",
     "per_target": {
       "glide": {
         "pearson_in_language": 0.5923,
@@ -94,7 +94,7 @@
         "clip_p10",
         "clip_rr"
       ],
-      "reason": "95-97% dintre tinte sunt exact zero; corelatiile nu sunt interpretabile"
+      "reason": "95-97% of targets are exactly zero; the correlations are not interpretable"
     }
   },
   "runs": {
@@ -2141,7 +2141,7 @@
         "predictor": "bert",
         "train_language": "english",
         "test_language": "english",
-        "label": "mBERT, engleza",
+        "label": "mBERT, pivot",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2233,7 +2233,7 @@
         "predictor": "bert",
         "train_language": "english",
         "test_language": "romanian_reviewed",
-        "label": "mBERT, EN -> RO reviz.",
+        "label": "mBERT, piv -> tgt",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2325,7 +2325,7 @@
         "predictor": "bert",
         "train_language": "romanian_reviewed",
         "test_language": "romanian_reviewed",
-        "label": "mBERT, romana reviz.",
+        "label": "mBERT, target lang.",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2489,7 +2489,7 @@
         "predictor": "clip",
         "train_language": "english",
         "test_language": "english",
-        "label": "CLIP XLM-R, engleza",
+        "label": "CLIP XLM-R, pivot",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2561,7 +2561,7 @@
         "predictor": "clip",
         "train_language": "english",
         "test_language": "romanian_reviewed",
-        "label": "CLIP XLM-R, EN -> RO reviz.",
+        "label": "CLIP XLM-R, piv -> tgt",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2633,7 +2633,7 @@
         "predictor": "clip",
         "train_language": "romanian_reviewed",
         "test_language": "romanian_reviewed",
-        "label": "CLIP XLM-R, romana reviz.",
+        "label": "CLIP XLM-R, target lang.",
         "cells": {
           "glide": {
             "n": 2080,
@@ -2705,7 +2705,7 @@
         "predictor": "corrcnn",
         "train_language": null,
         "test_language": null,
-        "label": "Correlation CNN (orb la limba)",
+        "label": "Correlation CNN (language-blind)",
         "cells": {
           "glide": {
             "n": 2080,

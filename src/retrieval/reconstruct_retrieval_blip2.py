@@ -41,7 +41,7 @@ entries = sorted(
 image_ids = np.array([i for i, _ in entries], dtype=np.int64)
 paths = [p for _, p in entries]
 assert len(paths) == 118287
-print(f"corpus: {len(paths)} imagini", flush=True)
+print(f"corpus: {len(paths)} images", flush=True)
 
 class ImageDataset(Dataset):
     def __len__(self):
@@ -53,7 +53,7 @@ class ImageDataset(Dataset):
 
 if os.path.exists(CORPUS_CACHE):
     corpus = np.load(CORPUS_CACHE, mmap_mode="r")
-    print(f"corpus din cache: {corpus.shape}", flush=True)
+    print(f"corpus from cache: {corpus.shape}", flush=True)
 else:
 
     corpus = np.lib.format.open_memmap(
@@ -112,7 +112,7 @@ torch.cuda.empty_cache()
 print(f"pe GPU: {tuple(gpu_corpus.shape)} {gpu_corpus.dtype}", flush=True)
 
 lists, report = {}, {}
-print(f"\n{'split':<6} {'metrica':<16} {'identic':>9} {'r':>8}   medii")
+print(f"\n{'split':<6} {'metric':<16} {'identic':>9} {'r':>8}   medii")
 for split in ["train", "val", "test"]:
     queries_frame = query_frames[split]
     reference = pd.read_csv(
@@ -155,7 +155,7 @@ for split in ["train", "val", "test"]:
         }
 
 overall = float(np.mean([v["exact_match"] for v in report.values()]))
-print(f"\npotrivire exacta, medie: {overall:.1%}")
+print(f"\nexact match, mean: {overall:.1%}")
 
 if overall < 0.95:
     raise SystemExit('Validation failed; the lists are not saved.')
@@ -165,9 +165,9 @@ np.savez_compressed(out, **{f"{s}_top{TOP_K}": v for s, v in lists.items()})
 with open(os.path.join(EMBED_DIR, "retrieval_lists_blip2.manifest.json"), "w") as handle:
     json.dump(
         {"model": "LAVIS blip2_feature_extractor / pretrain_vitL",
-         "ranking": "cosinus pe cele 32 de token-uri, maxim, sortare descrescatoare",
-         "corpus": "MS COCO train2017, 118287 imagini", "top_k": TOP_K,
+         "ranking": "cosine over the 32 image tokens, max-pooled, sorted descending",
+         "corpus": "MS COCO train2017, 118287 images", "top_k": TOP_K,
          "validation": report, "overall_exact_match": overall},
         handle, indent=2, ensure_ascii=False,
     )
-print(f"scris: {os.path.relpath(out, HERE)}")
+print(f"wrote: {os.path.relpath(out, HERE)}")

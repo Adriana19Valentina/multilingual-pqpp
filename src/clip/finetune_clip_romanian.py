@@ -11,23 +11,22 @@ import torch.nn.functional as F
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-IMAGES_DIR = os.path.join(DATA_DIR, "images")
-OUT_DIR = os.path.join(HERE, "checkpoints")
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+DATA_DIR = languages.DATA_DIR
+IMAGES_DIR = languages.IMAGES_DIR
+OUT_DIR = os.path.join(languages.CHECKPOINT_ROOT, "clip")
 
 ENCODERS = {
     "xlmr-vitb32": ("open_clip", "xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
     "longclip-b": ("longclip", "BeichenZhang/LongCLIP-B", "longclip-B.pt"),
 }
-LANGUAGE_COLUMNS = {
-    "english": "caption",
-    "romanian": "caption_romanian",
-    "romanian_reviewed": "caption_romanian_reviewed",
-}
+LANGUAGE_COLUMNS = languages.COLUMNS
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--language", default="romanian_reviewed", choices=sorted(LANGUAGE_COLUMNS))
+parser.add_argument("--language", default=languages.TARGET_LANGUAGE, choices=sorted(LANGUAGE_COLUMNS))
 parser.add_argument("--encoder", default="xlmr-vitb32", choices=sorted(ENCODERS))
 parser.add_argument("--epochs", type=int, default=5)
 parser.add_argument("--batch-size", type=int, default=64)
@@ -53,7 +52,7 @@ if KIND == "open_clip":
     tokenizer = open_clip.get_tokenizer(MODEL_NAME)
 else:
     import sys as _sys
-    _sys.path.insert(0, os.path.join(HERE, "..", "third_party"))
+    _sys.path.insert(0, languages.THIRD_PARTY)
     from huggingface_hub import hf_hub_download
     from longclip_model import longclip
 
@@ -92,7 +91,7 @@ train_loader = DataLoader(PairDataset("train"), batch_size=args.batch_size, shuf
                           num_workers=8, pin_memory=True, collate_fn=collate, drop_last=True)
 val_loader = DataLoader(PairDataset("val"), batch_size=args.batch_size, shuffle=False,
                         num_workers=8, pin_memory=True, collate_fn=collate)
-print(f"limba={args.language}  train={len(train_loader.dataset)}  "
+print(f"language={args.language}  train={len(train_loader.dataset)}  "
       f"val={len(val_loader.dataset)}  lr={args.lr:g}")
 
 def contrastive_loss(image_features, text_features, logit_scale):
@@ -120,7 +119,7 @@ def evaluate():
     }
 
 baseline = evaluate()
-print(f"inainte de fine-tuning: R@1={baseline['recall@1']:.3f} "
+print(f"before fine-tuning: R@1={baseline['recall@1']:.3f} "
       f"R@5={baseline['recall@5']:.3f} rang median={baseline['median_rank']:.0f}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -144,7 +143,7 @@ for epoch in range(1, args.epochs + 1):
 
     metrics = evaluate()
     history.append({"epoch": epoch, "train_loss": total / steps, **metrics})
-    print(f"epoca {epoch}  loss={total / steps:.4f}  R@1={metrics['recall@1']:.3f} "
+    print(f"epoch {epoch}  loss={total / steps:.4f}  R@1={metrics['recall@1']:.3f} "
           f"R@5={metrics['recall@5']:.3f} rang median={metrics['median_rank']:.0f}", flush=True)
     if metrics["recall@1"] > best["recall@1"]:
         best = {"recall@1": metrics["recall@1"], "epoch": epoch,
@@ -161,7 +160,7 @@ else:
                 "pretrained": PRETRAINED, "language": args.language,
                 "epoch": best["epoch"], "recall@1": best["recall@1"],
                 "baseline_recall@1": baseline["recall@1"], "args": vars(args)}, path)
-    print(f"\nsalvat: {os.path.relpath(path, HERE)}  (epoca {best['epoch']}, "
+    print(f"\nsaved: {os.path.relpath(path, HERE)}  (epoch {best['epoch']}, "
           f"R@1 {baseline['recall@1']:.3f} -> {best['recall@1']:.3f})")
 
 _suffix = "" if args.encoder == "xlmr-vitb32" else f"_{args.encoder}"

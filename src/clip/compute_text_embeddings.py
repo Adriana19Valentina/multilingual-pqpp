@@ -7,13 +7,17 @@ import open_clip
 import pandas as pd
 import torch
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.DATA_DIR
 
 ENCODERS = {
     "xlmr-vitb32": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
     "xlmr-vith14": ("xlm-roberta-large-ViT-H-14", "frozen_laion5b_s13b_b90k"),
-    "xlmr-vitb32-ft-romanian_reviewed": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
 }
+ENCODERS[f"xlmr-vitb32-ft-{languages.TARGET_LANGUAGE}"] = ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k")
 
 import argparse as _argparse
 _parser = _argparse.ArgumentParser()
@@ -22,17 +26,9 @@ _cli = _parser.parse_args()
 TAG = _cli.encoder
 MODEL_NAME, PRETRAINED = ENCODERS[TAG]
 
-OUT_DIR = os.path.join(HERE, "clip_embeddings")
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
-LANGUAGE_COLUMNS = {
-    "english": "caption",
-    "romanian": "caption_romanian",
-    "romanian_reviewed": "caption_romanian_reviewed",
-}
+OUT_DIR = languages.EMBED_DIR
+SPLIT_FILES = languages.SPLIT_FILES
+LANGUAGE_COLUMNS = languages.COLUMNS
 
 BATCH_SIZE = 256
 
@@ -41,11 +37,11 @@ model, _, _ = open_clip.create_model_and_transforms(MODEL_NAME, pretrained=PRETR
 if "-ft-" in TAG:
 
     _lang = TAG.split("-ft-")[1]
-    _ck = torch.load(os.path.join(HERE, "..", "models", "checkpoints",
+    _ck = torch.load(os.path.join(languages.CHECKPOINT_ROOT, "clip",
                                   f"clip_finetuned_{_lang}.pt"),
                      map_location="cpu", weights_only=False)
     model.load_state_dict(_ck["model_state_dict"])
-    print(f"greutati adaptate: epoca {_ck['epoch']}, R@1 "
+    print(f"adapted weights: epoch {_ck['epoch']}, R@1 "
           f"{_ck['baseline_recall@1']:.3f} -> {_ck['recall@1']:.3f}")
 tokenizer = open_clip.get_tokenizer(MODEL_NAME)
 model.eval().to(device)
@@ -59,7 +55,7 @@ for split_name, filename in SPLIT_FILES.items():
     frames.append(frame)
 data = pd.concat(frames, ignore_index=True)
 data["prompt_key"] = data["source"] + ":" + data["caption_id"].astype(str)
-print(f"prompturi: {len(data)}")
+print(f"prompts: {len(data)}")
 
 image_path = os.path.join(OUT_DIR, f"image_embeddings_{TAG}.npz")
 if os.path.exists(image_path):
@@ -76,7 +72,7 @@ if os.path.exists(image_path):
         'prompt order does not match the image file'
     )
     assert (image_keys["split"].to_numpy() == data["split"].to_numpy()).all()
-    print("aliniere cu image_embeddings verificata")
+    print("alignment with image_embeddings verified")
 else:
     print('WARNING: image_embeddings is missing; alignment cannot be verified')
 
@@ -97,18 +93,18 @@ arrays = {
 }
 
 for language, column in LANGUAGE_COLUMNS.items():
-    assert column in data.columns, f"lipseste coloana {column}"
-    assert data[column].notna().all(), f"valori lipsa in {column}"
+    assert column in data.columns, f"column {column} is missing from the CSV; check COLUMNS in src/languages.py"
+    assert data[column].notna().all(), f"missing values in {column}"
     embeddings = encode([str(x) for x in data[column]])
     arrays[f"text_{language}"] = embeddings
     norms = np.linalg.norm(embeddings, axis=1)
-    print(f"  {language:<20} {embeddings.shape}  norma medie {norms.mean():.2f}")
+    print(f"  {language:<20} {embeddings.shape}  mean norm {norms.mean():.2f}")
 
-english = arrays["text_english"]
-english_unit = english / np.linalg.norm(english, axis=1, keepdims=True)
+pivot = arrays[f"text_{languages.PIVOT}"]
+english_unit = pivot / np.linalg.norm(pivot, axis=1, keepdims=True)
 print('\nalignment against the pivot (mean cosine, first 1000 prompts):')
 for language in LANGUAGE_COLUMNS:
-    if language == "english":
+    if language == languages.PIVOT:
         continue
     other = arrays[f"text_{language}"]
     other_unit = other / np.linalg.norm(other, axis=1, keepdims=True)
@@ -138,6 +134,6 @@ manifest_path = os.path.join(OUT_DIR, f"text_embeddings_{TAG}.manifest.json")
 with open(manifest_path, "w") as handle:
     json.dump(manifest, handle, indent=2, ensure_ascii=False)
 
-print(f"\nscris: {os.path.relpath(npz_path, HERE)} "
+print(f"\nwrote: {os.path.relpath(npz_path, HERE)} "
       f"({os.path.getsize(npz_path) / 2**20:.0f} MiB)")
-print(f"scris: {os.path.relpath(manifest_path, HERE)}")
+print(f"wrote: {os.path.relpath(manifest_path, HERE)}")

@@ -16,25 +16,29 @@ parser.add_argument(
 )
 cli_args = parser.parse_args()
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(HERE, "results")
-PREDICTIONS_DIR = os.path.join(HERE, "predictions")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
 
-LANGUAGES = ["english", "romanian", "romanian_reviewed"]
-TRAIN_LANGUAGES = ["english", "romanian_reviewed"]
-LANGUAGE_LABELS = {
-    "english": "English",
-    "romanian": "Romanian (raw MT)",
-    "romanian_reviewed": "Romanian (reviewed)",
-}
+PIVOT = languages.PIVOT
+TARGET = languages.TARGET_LANGUAGE
+RAW_TARGET = languages.RAW_TARGET_LANGUAGE
 
-ROW_SPECS = [
-    ("english", "english", "English"),
-    ("english", "romanian_reviewed", "  EN -> RO (reviewed)"),
-    ("english", "romanian", "  EN -> RO (raw MT)"),
-    ("romanian_reviewed", "romanian_reviewed", "Romanian (reviewed)"),
-    ("romanian_reviewed", "english", "  RO -> EN"),
-]
+HERE = languages.REPO
+RESULTS_DIR = languages.RESULTS_DIR
+PREDICTIONS_DIR = languages.PREDICTIONS_DIR
+
+LANGUAGES = [l for l in (PIVOT, RAW_TARGET, TARGET) if l]
+TRAIN_LANGUAGES = [PIVOT, TARGET]
+LANGUAGE_LABELS = {l: languages.LABELS.get(l, l) for l in LANGUAGES}
+
+ROW_SPECS = [spec for spec in [
+    (PIVOT, PIVOT, LANGUAGE_LABELS[PIVOT]),
+    (PIVOT, TARGET, "  pivot -> target"),
+    (PIVOT, RAW_TARGET, "  pivot -> target (raw MT)") if RAW_TARGET else None,
+    (TARGET, TARGET, LANGUAGE_LABELS[TARGET]),
+    (TARGET, PIVOT, "  target -> pivot"),
+] if spec]
 
 MAIN_COLUMNS = [
     ("glide", "GLIDE", "HBPP"),
@@ -145,10 +149,10 @@ add = lines.append
 
 add("=" * 130)
 add('Multilingual PQPP -- pre-generation / pre-retrieval predictor (fine-tuned BERT)')
-add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
+add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 130)
 add("")
-add("Structura urmeaza Tabelul 3 din PQPP (arXiv 2406.04746v2, pag. 8).")
+add("The layout follows Table 3 of PQPP (arXiv 2406.04746v2, p. 8).")
 add("The baseline row is the paper's 'Fine-tuned BERT' row: bert-base-cased,")
 add('pivot language, the same split (6080/2040/2080) and the same targets.')
 add('Our runs use bert-base-multilingual-cased.')
@@ -184,7 +188,7 @@ for subset in SUBSETS:
             row += render(metrics, "pearson") + render(metrics, "kendall")
         add(row)
 
-        if subset == "total" and train_language == "english" and test_language == "english":
+        if subset == "total" and train_language == PIVOT and test_language == PIVOT:
             delta = f"{'  ^ delta vs paper':<22}"
             for target, _, _ in MAIN_COLUMNS:
                 metrics = stats(RUNS[(target, train_language)], test_language, subset)
@@ -231,14 +235,14 @@ for train_language, test_language, label in ROW_SPECS:
 
 add("")
 add('Comparison between predictors on transfer to the target language:')
-add(f"  {'tinta':<10}{'BERT EN->EN':<14}{'BERT EN->RO':<14}{'pastrat':<10}"
-    f"{'CLIP EN->EN':<14}{'CLIP EN->RO':<14}{'pastrat':<10}")
+add(f"  {'target':<10}{'BERT piv->piv':<14}{'BERT piv->tgt':<14}{'kept':<10}"
+    f"{'CLIP piv->piv':<14}{'CLIP piv->tgt':<14}{'kept':<10}")
 for target, model, measure in MAIN_COLUMNS[:2]:
     cells = [f"  {target:<10}"]
     for predictor in ["bert", "clip"]:
-        run = ALL_RUNS[predictor][(target, "english")]
-        in_language = stats(run, "english", "total")
-        transferred = stats(run, "romanian_reviewed", "total")
+        run = ALL_RUNS[predictor][(target, PIVOT)]
+        in_language = stats(run, PIVOT, "total")
+        transferred = stats(run, TARGET, "total")
         if in_language is None or transferred is None:
             cells.append(f"{'--':<38}")
             continue
@@ -284,11 +288,11 @@ def generative_row(label, getter):
     add(row)
 
 generative_row('  BERT (mBERT), pivot',
-               lambda t: stats(ALL_RUNS["bert"][(t, "english")], "english", "total"))
-generative_row("  BERT (mBERT), EN -> RO reviz.",
-               lambda t: stats(ALL_RUNS["bert"][(t, "english")], "romanian_reviewed", "total"))
-generative_row("  BERT (mBERT), romana reviz.",
-               lambda t: stats(ALL_RUNS["bert"][(t, "romanian_reviewed")], "romanian_reviewed", "total"))
+               lambda t: stats(ALL_RUNS["bert"][(t, PIVOT)], PIVOT, "total"))
+generative_row("  BERT (mBERT), piv -> tgt",
+               lambda t: stats(ALL_RUNS["bert"][(t, PIVOT)], TARGET, "total"))
+generative_row("  BERT (mBERT), target lang.",
+               lambda t: stats(ALL_RUNS["bert"][(t, TARGET)], TARGET, "total"))
 add("")
 
 def load_clip_control(target):
@@ -296,15 +300,15 @@ def load_clip_control(target):
     if not os.path.exists(path):
         return None
     with open(path) as handle:
-        return json.load(handle)["evaluations"]["english"]["total"]
+        return json.load(handle)["evaluations"][PIVOT]["total"]
 
 generative_row("  CLIP control (Long-CLIP), EN", load_clip_control)
 generative_row('  CLIP (XLM-R), pivot',
-               lambda t: stats(ALL_RUNS["clip"][(t, "english")], "english", "total"))
-generative_row("  CLIP (XLM-R), EN -> RO reviz.",
-               lambda t: stats(ALL_RUNS["clip"][(t, "english")], "romanian_reviewed", "total"))
-generative_row("  CLIP (XLM-R), romana reviz.",
-               lambda t: stats(ALL_RUNS["clip"][(t, "romanian_reviewed")], "romanian_reviewed", "total"))
+               lambda t: stats(ALL_RUNS["clip"][(t, PIVOT)], PIVOT, "total"))
+generative_row("  CLIP (XLM-R), piv -> tgt",
+               lambda t: stats(ALL_RUNS["clip"][(t, PIVOT)], TARGET, "total"))
+generative_row("  CLIP (XLM-R), target lang.",
+               lambda t: stats(ALL_RUNS["clip"][(t, TARGET)], TARGET, "total"))
 add("")
 generative_row("  Correlation CNN (Long-CLIP)",
                lambda t: (load_corrcnn(t) or {}).get("evaluation", {}).get("total"))
@@ -313,12 +317,12 @@ add('Correlation CNN appears once: it does not use the prompt text, so')
 add('its result is the same in any language -- there is no transfer row.')
 add("")
 add('Sensitivity to translation, by the weight of text in the input (GLIDE):')
-add(f"  {'predictor':<22}{'intrare':<18}{'EN->EN':<10}{'EN->RO':<10}{'pastrat':<9}")
+add(f"  {'predictor':<22}{'input':<18}{'piv->piv':<10}{'piv->tgt':<10}{'kept':<9}")
 for label, source, transfer in [
-    ("BERT", lambda: stats(ALL_RUNS["bert"][("glide", "english")], "english", "total"),
-     lambda: stats(ALL_RUNS["bert"][("glide", "english")], "romanian_reviewed", "total")),
-    ("CLIP", lambda: stats(ALL_RUNS["clip"][("glide", "english")], "english", "total"),
-     lambda: stats(ALL_RUNS["clip"][("glide", "english")], "romanian_reviewed", "total")),
+    ("BERT", lambda: stats(ALL_RUNS["bert"][("glide", PIVOT)], PIVOT, "total"),
+     lambda: stats(ALL_RUNS["bert"][("glide", PIVOT)], TARGET, "total")),
+    ("CLIP", lambda: stats(ALL_RUNS["clip"][("glide", PIVOT)], PIVOT, "total"),
+     lambda: stats(ALL_RUNS["clip"][("glide", PIVOT)], TARGET, "total")),
     ("Correlation CNN", lambda: (load_corrcnn("glide") or {}).get("evaluation", {}).get("total"),
      lambda: (load_corrcnn("glide") or {}).get("evaluation", {}).get("total")),
 ]:
@@ -374,24 +378,24 @@ def cell(predictor, train_language, test_language, target, subset="total"):
     return (node or {}).get(subset)
 
 FULL_ROWS = [
-    ("bert", "english", "english", '  mBERT, pivot'),
-    ("bert", "english", "romanian_reviewed", "  mBERT, EN -> RO reviz."),
-    ("bert", "romanian_reviewed", "romanian_reviewed", "  mBERT, romana reviz."),
+    ("bert", PIVOT, PIVOT, '  mBERT, pivot'),
+    ("bert", PIVOT, TARGET, "  mBERT, piv -> tgt"),
+    ("bert", TARGET, TARGET, "  mBERT, target lang."),
     (None, None, None, ""),
-    ("clip_control", "english", "english", "  CLIP control (Long-CLIP)"),
-    ("clip", "english", "english", '  CLIP XLM-R, pivot'),
-    ("clip", "english", "romanian_reviewed", "  CLIP XLM-R, EN -> RO reviz."),
-    ("clip", "romanian_reviewed", "romanian_reviewed", "  CLIP XLM-R, romana reviz."),
+    ("clip_control", PIVOT, PIVOT, "  CLIP control (Long-CLIP)"),
+    ("clip", PIVOT, PIVOT, '  CLIP XLM-R, pivot'),
+    ("clip", PIVOT, TARGET, "  CLIP XLM-R, piv -> tgt"),
+    ("clip", TARGET, TARGET, "  CLIP XLM-R, target lang."),
     (None, None, None, ""),
-    ("corrcnn", None, None, "  Correlation CNN (orb la limba)"),
+    ("corrcnn", None, None, "  Correlation CNN (language-blind)"),
 ]
 
 add("")
 add("")
 add("=" * 130)
-add("TABELUL 3 COMPLET -- toti predictorii, ambele task-uri, subset total")
+add("FULL TABLE 3 -- all predictors, both tasks, full subset")
 add("=" * 130)
-add("Controalele (Long-CLIP) reproduc encoderul din paper. Correlation CNN nu")
+add("The Long-CLIP controls reproduce the encoder from the paper. Correlation CNN does not")
 add('receive the prompt text, so it has a single row: in its')
 add('identical for any language.')
 add("")
@@ -422,13 +426,13 @@ for predictor, train_language, test_language, label in FULL_ROWS:
     add(row)
 add("")
 add('Sensitivity to translation, by the weight of text in the input:')
-add(f"  {'predictor':<20}{'intrare':<18}{'tinta':<12}{'EN->EN':<10}{'EN->RO':<10}{'pastrat':<9}")
+add(f"  {'predictor':<20}{'input':<18}{'target':<12}{'piv->piv':<10}{'piv->tgt':<10}{'kept':<9}")
 for predictor, name, kind in [("bert", "mBERT", 'text only'),
                               ("clip", "CLIP XLM-R", "text + imagine"),
                               ("corrcnn", "Correlation CNN", 'image only')]:
     for target in ["glide", "clip_p10", "blip2_p10"]:
-        source = cell(predictor, "english", "english", target)
-        transfer = cell(predictor, "english", "romanian_reviewed", target)
+        source = cell(predictor, PIVOT, PIVOT, target)
+        transfer = cell(predictor, PIVOT, TARGET, target)
         if source is None or transfer is None or not source.get("pearson"):
             continue
         add(f"  {name:<20}{kind:<18}{target:<12}{source['pearson']:<10.3f}"
@@ -498,10 +502,10 @@ add('TRANSFER DEGRADATION: pivot in-language vs. pivot applied to the translatio
 add("-" * 130)
 add('Steiger test for dependent correlations (same test set, same labels).')
 add("")
-add(f"  {'tinta':<14}{'EN->EN':<10}{'EN->RO rev':<13}{'pastrat':<10}{'z':<9}{'p':<11}")
+add(f"  {'target':<14}{'piv->piv':<10}{'piv->tgt':<13}{'kept':<10}{'z':<9}{'p':<11}")
 for target, model, measure in MAIN_COLUMNS:
-    in_language = predictions_for(target, "english", "english")
-    transferred = predictions_for(target, "english", "romanian_reviewed")
+    in_language = predictions_for(target, PIVOT, PIVOT)
+    transferred = predictions_for(target, PIVOT, TARGET)
     if in_language is None or transferred is None:
         add(f"  {target:<14}--")
         continue
@@ -530,7 +534,7 @@ add("")
 add("-" * 130)
 add('PROVENANCE')
 add("-" * 130)
-add(f"  {'rulare':<30}{'grila':<8}{'lr':<10}{'wd':<8}{'epoca':<8}{'val MSE':<12}{'precizie':<10}")
+add(f"  {'run':<30}{'grid':<8}{'lr':<10}{'wd':<8}{'epoch':<8}{'val MSE':<12}{'precizie':<10}")
 for (target, language), run in sorted(RUNS.items()):
     if run is None:
         add(f"  {target + '__' + language:<30}{'NERULAT':<8}")
@@ -546,7 +550,7 @@ for (target, language), run in sorted(RUNS.items()):
 missing = [f"{t}__{l}" for (t, l), r in RUNS.items() if r is None]
 if missing:
     add("")
-    add(f"  Lipsesc {len(missing)} rulari:")
+    add(f"  Missing {len(missing)} runs:")
     for run_name in sorted(missing):
         target, _, language = run_name.partition("__")
         add(f"    python3 finetunedbert_multilingual.py --language {language} --target {target}")
@@ -562,7 +566,7 @@ export = {
     "backbone": "bert-base-multilingual-cased",
     "paper_baseline": {
         "backbone": "bert-base-cased",
-        "language": "english",
+        "language": PIVOT,
         "note": 'all values marked ‡ (p < 0.001) in the paper',
         "values": {
             target: {"pearson": pearson, "kendall": kendall}
@@ -570,8 +574,8 @@ export = {
         },
     },
     "transfer_significance": {
-        "comparison": "english in-language vs english -> romanian_reviewed (zero-shot)",
-        "test": "Steiger/Williams, corelatii dependente",
+        "comparison": f"{PIVOT} in-language vs {PIVOT} -> {TARGET} (zero-shot)",
+        "test": "Steiger/Williams, dependent correlations",
         "per_target": {},
     },
     "degenerate_subsets": {
@@ -607,10 +611,10 @@ for (target, language), run in sorted(RUNS.items()):
             "setting": evaluation["setting"],
             **{subset: evaluation[subset] for subset in SUBSETS if subset in evaluation},
         }
-    if language == "english":
+    if language == PIVOT:
         entry["delta_vs_paper"] = {
             statistic: round(
-                run["evaluations"]["english"]["total"][statistic]
+                run["evaluations"][PIVOT]["total"][statistic]
                 - PAPER_BASELINE[target][index],
                 4,
             )
@@ -680,10 +684,10 @@ for (target, language), run in sorted(ALL_RUNS["clip"].items()):
             for test_language, evaluation in run["evaluations"].items()
         },
     }
-    if language == "english":
+    if language == PIVOT:
         entry["delta_vs_paper"] = {
             statistic: round(
-                run["evaluations"]["english"]["total"][statistic]
+                run["evaluations"][PIVOT]["total"][statistic]
                 - PAPER_BASELINE_CLIP[target][index], 4)
             for index, statistic in enumerate(["pearson", "kendall"])
         }
@@ -727,7 +731,7 @@ for train_language, test_language, label in ROW_SPECS:
         ]
     wide_rows.append(row)
 
-    if train_language == "english" and test_language == "english":
+    if train_language == PIVOT and test_language == PIVOT:
         delta_row = ["delta vs paper"]
         for target, _, _ in MAIN_COLUMNS:
             metrics = stats(RUNS[(target, train_language)], test_language, "total")
@@ -758,7 +762,7 @@ for predictor_key, target, model_name, measure, train_language in [
     for t, m, ms in MAIN_COLUMNS
     for l in TRAIN_LANGUAGES
 ]:
-    task = "generare" if target in ("glide", "sdxl") else 'retrieval'
+    task = "generation" if target in ("glide", "sdxl") else 'retrieval'
     if True:
         run = ALL_RUNS[predictor_key][(target, train_language)]
         if run is None:
@@ -789,8 +793,8 @@ long_path = os.path.join(RESULTS_DIR, "table3_multilingual_long.tsv")
 with open(long_path, "w") as handle:
     handle.write("\n".join("\t".join(row) for row in long_rows) + "\n")
 
-print(f"scris: {os.path.relpath(text_path, HERE)}  ({len(lines)} linii)")
-print(f"scris: {os.path.relpath(json_path, HERE)}  ({len(export['runs'])} rulari)")
-print(f"scris: {os.path.relpath(wide_path, HERE)}  ({len(wide_rows) - 1} randuri)")
-print(f"scris: {os.path.relpath(long_path, HERE)}  ({len(long_rows) - 1} randuri)")
-print(f"  separator zecimal: {'virgula' if cli_args.decimal == 'comma' else 'punct'}")
+print(f"wrote: {os.path.relpath(text_path, HERE)}  ({len(lines)} lines)")
+print(f"wrote: {os.path.relpath(json_path, HERE)}  ({len(export['runs'])} runs)")
+print(f"wrote: {os.path.relpath(wide_path, HERE)}  ({len(wide_rows) - 1} rows)")
+print(f"wrote: {os.path.relpath(long_path, HERE)}  ({len(long_rows) - 1} rows)")
+print(f"  decimal separator: {'comma' if cli_args.decimal == 'comma' else 'dot'}")

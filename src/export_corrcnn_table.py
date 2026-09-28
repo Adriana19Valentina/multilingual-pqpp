@@ -3,12 +3,16 @@ import json
 import os
 from datetime import datetime
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(HERE, "results")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+HERE = languages.REPO
+RESULTS_DIR = languages.RESULTS_DIR
 
 COLUMNS = [
-    ("glide", "GLIDE", "HBPP", "generare"),
-    ("sdxl", "SDXL", "HBPP", "generare"),
+    ("glide", "GLIDE", "HBPP", "generation"),
+    ("sdxl", "SDXL", "HBPP", "generation"),
     ("clip_p10", "CLIP", "P@10", 'retrieval'),
     ("clip_rr", "CLIP", "RR", 'retrieval'),
     ("blip2_p10", "BLIP-2", "P@10", 'retrieval'),
@@ -22,13 +26,13 @@ PAPER = {
 }
 
 SETUP = {
-    "generare": {
+    "generation": {
         "images": 4, "note": "2 SDXL + 2 GLIDE",
-        "conv": "3 straturi (16-64)", "fc1": "262144 -> 512", "out": "sigmoid",
+        "conv": "3 layers (16-64)", "fc1": "262144 -> 512", "out": "sigmoid",
     },
     'retrieval': {
-        "images": 25, "note": "top-25 ale sistemului prezis",
-        "conv": "4 straturi (32-64)", "fc1": "65536 -> 1024", "out": "ReLU",
+        "images": 25, "note": "top-25 of the predicted system",
+        "conv": "4 layers (32-64)", "fc1": "65536 -> 1024", "out": "ReLU",
     },
 }
 
@@ -65,16 +69,16 @@ lines = []
 add = lines.append
 add("=" * 118)
 add('Correlation CNN -- post-generation / post-retrieval predictor')
-add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
+add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 118)
 add("")
 add('The input is a 512x512 correlation matrix between embedding dimensions,')
 add("computed over the prompt's images. The text NEVER enters the model:")
 add('`retrieve_embeddings` exists in the original code but is never called.')
 add("")
-add("De aceea tabelul are un singur rand de rezultate. O varianta 'multilingva'")
-add("ar da cifre identice, bit cu bit. Encoderul de imagine e Long-CLIP, cel din")
-add("paper, singurul care permite comparatia cu Tabelul 3.")
+add("That is why the table has a single row of results. A 'multilingual' variant")
+add("would give bit-for-bit identical numbers. The image encoder is Long-CLIP, the")
+add("one from the paper, the only one comparable with Table 3.")
 add("")
 add('‡ p < 0.001   † p < 0.01   -- against the random baseline')
 add("")
@@ -113,7 +117,7 @@ add(delta)
 
 add("")
 add("Pe subseturi (Pearson):")
-add(f"  {'tinta':<12}{'total':<10}{'mscoco':<10}{'drawbench':<12}")
+add(f"  {'target':<12}{'total':<10}{'mscoco':<10}{'drawbench':<12}")
 for target, _, _, _ in COLUMNS:
     parts = [number(cell(target, s)["pearson"]) if cell(target, s) else "--"
              for s in ("total", "mscoco", "drawbench")]
@@ -121,7 +125,7 @@ for target, _, _, _ in COLUMNS:
 
 add("")
 add('The configuration differs between tasks, as it does in the original code:')
-add(f"  {'':<12}{'imagini':<10}{'convolutii':<22}{'fc1':<18}{'iesire':<10}")
+add(f"  {'':<12}{'images':<10}{'convolutions':<22}{'fc1':<18}{'output':<10}")
 for task, setup in SETUP.items():
     add(f"  {task:<12}{setup['images']:<10}{setup['conv']:<22}"
         f"{setup['fc1']:<18}{setup['out']:<10}")
@@ -161,7 +165,7 @@ with open(json_path, "w") as handle:
         "generated": datetime.now().isoformat(timespec="seconds"),
         "predictor": "correlation CNN",
         "language_independent": True,
-        "note": "nu foloseste textul promptului; rezultatele sunt identice in orice limba",
+        "note": "does not use the prompt text; results are identical in any language",
         "image_encoder": "longclip-b",
         "paper_baseline": {t: {"pearson": p, "kendall": k} for t, (p, k) in PAPER.items()},
         "setup": SETUP,
@@ -169,6 +173,6 @@ with open(json_path, "w") as handle:
                   for t, _, _, _ in COLUMNS},
     }, handle, indent=2, ensure_ascii=False)
 
-print(f"scris: {os.path.relpath(text_path, HERE)}")
-print(f"scris: {os.path.relpath(tsv_path, HERE)}")
-print(f"scris: {os.path.relpath(json_path, HERE)}")
+print(f"wrote: {os.path.relpath(text_path, HERE)}")
+print(f"wrote: {os.path.relpath(tsv_path, HERE)}")
+print(f"wrote: {os.path.relpath(json_path, HERE)}")

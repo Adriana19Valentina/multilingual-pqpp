@@ -118,7 +118,7 @@ def main():
     if args.out:
         np.savez_compressed(args.out, **{f"{args.split}_top{args.top_k}":
                                          ids[:, : args.top_k]})
-        print(f"scris: {args.out}")
+        print(f"wrote: {args.out}")
 
     if args.validate:
         relevance = {
@@ -134,7 +134,7 @@ def main():
             for position in range(len(frame))
         ]
         computed = pd.DataFrame(computed, columns=["precision", "reciprocal_rank"])
-        print(f"\n{'metrica':<18}{'identic':>9}{'r':>9}   medii")
+        print(f"\n{'metric':<18}{'identic':>9}{'r':>9}   medii")
         for metric in ["precision", "reciprocal_rank"]:
             a = computed[metric].to_numpy()
             b = reference[metric].to_numpy()

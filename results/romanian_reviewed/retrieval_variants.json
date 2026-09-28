@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-27T16:06:59",
+  "generated": "2026-09-28T08:33:30",
   "paper_baseline": {
     "clip_p10": 0.473,
     "clip_rr": 0.2,
@@ -19,7 +19,7 @@
       }
     },
     {
-      "label": "control Long-CLIP, agregare a",
+      "label": "Long-CLIP control, aggregation a",
       "run": "retrieval__english",
       "test_language": "english",
       "cells": {
@@ -30,7 +30,7 @@
       }
     },
     {
-      "label": "control Long-CLIP, agregare b",
+      "label": "Long-CLIP control, aggregation b",
       "run": "retrieval__english__b",
       "test_language": "english",
       "cells": {
@@ -41,7 +41,7 @@
       }
     },
     {
-      "label": "XLM-R, concat, agregare a",
+      "label": "XLM-R, concat, aggregation a",
       "run": "retrieval__english",
       "test_language": "english",
       "cells": {
@@ -52,7 +52,7 @@
       }
     },
     {
-      "label": "XLM-R, concat, agregare b",
+      "label": "XLM-R, concat, aggregation b",
       "run": "retrieval__english__b",
       "test_language": "english",
       "cells": {
@@ -63,7 +63,7 @@
       }
     },
     {
-      "label": "interactiune, EN → EN",
+      "label": "interaction, piv → piv",
       "run": "retrieval__english__b__inter",
       "test_language": "english",
       "cells": {
@@ -74,7 +74,7 @@
       }
     },
     {
-      "label": "interactiune, EN → RO",
+      "label": "interaction, piv → tgt",
       "run": "retrieval__english__b__inter",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -85,7 +85,7 @@
       }
     },
     {
-      "label": "interactiune, RO → RO",
+      "label": "interaction, tgt → tgt",
       "run": "retrieval__romanian_reviewed__b__inter",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -96,7 +96,7 @@
       }
     },
     {
-      "label": "inter + turn text, EN → EN",
+      "label": "interaction + text tower, piv → piv",
       "run": "retrieval__english__b__inter__tt",
       "test_language": "english",
       "cells": {
@@ -107,7 +107,7 @@
       }
     },
     {
-      "label": "inter + turn text, EN → RO",
+      "label": "interaction + text tower, piv → tgt",
       "run": "retrieval__english__b__inter__tt",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -118,7 +118,7 @@
       }
     },
     {
-      "label": "inter + turn text, RO → RO (secv.)",
+      "label": "interaction + text tower, tgt → tgt (seq.)",
       "run": "retrieval__romanian_reviewed__b__inter__tt__seq",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -129,7 +129,7 @@
       }
     },
     {
-      "label": "augm EN+RO → EN",
+      "label": "augmented, piv+tgt → piv",
       "run": "retrieval__english+romanian_reviewed__b__inter",
       "test_language": "english",
       "cells": {
@@ -140,7 +140,7 @@
       }
     },
     {
-      "label": "augm EN+RO → RO",
+      "label": "augmented, piv+tgt → tgt",
       "run": "retrieval__english+romanian_reviewed__b__inter",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -151,7 +151,7 @@
       }
     },
     {
-      "label": "augm EN+ambele → EN",
+      "label": "augmented, piv+both → piv",
       "run": "retrieval__english+romanian+romanian_reviewed__b__inter",
       "test_language": "english",
       "cells": {
@@ -162,7 +162,7 @@
       }
     },
     {
-      "label": "augm EN+ambele → RO",
+      "label": "augmented, piv+both → tgt",
       "run": "retrieval__english+romanian+romanian_reviewed__b__inter",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -173,7 +173,7 @@
       }
     },
     {
-      "label": "augm EN+RO + consistenta → RO",
+      "label": "augmented, piv+tgt + consistency → tgt",
       "run": "retrieval__english+romanian_reviewed__b__inter__cons0.5",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -184,7 +184,7 @@
       }
     },
     {
-      "label": "secv. RO → RO",
+      "label": "sequential, tgt → tgt",
       "run": "retrieval__romanian_reviewed__b__inter__seq",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -195,7 +195,7 @@
       }
     },
     {
-      "label": "secv. + augm EN+RO → RO",
+      "label": "sequential, + augm piv+tgt → tgt",
       "run": "retrieval__english+romanian_reviewed__b__inter__seq",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -206,7 +206,7 @@
       }
     },
     {
-      "label": "secv. + augm ambele → RO",
+      "label": "sequential, + augm both → tgt",
       "run": "retrieval__english+romanian+romanian_reviewed__b__inter__seq",
       "test_language": "romanian_reviewed",
       "cells": {
@@ -217,7 +217,7 @@
       }
     },
     {
-      "label": "secv. + augm + turn text → EN",
+      "label": "sequential, + augm + text tower → piv",
       "run": "retrieval__english+romanian_reviewed__b__inter__tt__seq",
       "test_language": "english",
       "cells": {
@@ -228,7 +228,7 @@
       }
     },
     {
-      "label": "secv. + augm + turn text → RO",
+      "label": "sequential, + augm + text tower → tgt",
       "run": "retrieval__english+romanian_reviewed__b__inter__tt__seq",
       "test_language": "romanian_reviewed",
       "cells": {

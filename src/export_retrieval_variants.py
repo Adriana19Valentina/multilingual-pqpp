@@ -3,52 +3,60 @@ import json
 import os
 from datetime import datetime
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-RESULTS_DIR = os.path.join(HERE, "results")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+PIVOT = languages.PIVOT
+TARGET = languages.TARGET_LANGUAGE
+RAW_TARGET = languages.RAW_TARGET_LANGUAGE
+
+HERE = languages.REPO
+RESULTS_DIR = languages.RESULTS_DIR
 T = ["clip_p10", "clip_rr", "blip2_p10", "blip2_rr"]
 LABELS = {"clip_p10": "CLIP P@10", "clip_rr": "CLIP RR",
           "blip2_p10": "BLIP-2 P@10", "blip2_rr": "BLIP-2 RR"}
 PAPER = {"clip_p10": 0.473, "clip_rr": 0.200, "blip2_p10": 0.498, "blip2_rr": 0.166}
 
 ROWS = [
-    ("— cod original si controale —", None, None, None),
+    ("— original code and controls —", None, None, None),
     ("PQPP paper (Long-CLIP)", None, "PAPER", None),
-    ("control Long-CLIP, agregare a", "clip_retrieval_longclip-b", "retrieval__english", "english"),
-    ("control Long-CLIP, agregare b", "clip_retrieval_longclip-b", "retrieval__english__b", "english"),
-    ('XLM-R, concat, aggregation a', "clip_retrieval", "retrieval__english", "english"),
-    ('XLM-R, concat, aggregation b', "clip_retrieval", "retrieval__english__b", "english"),
+    ("Long-CLIP control, aggregation a", "clip_retrieval_longclip-b", f"retrieval__{PIVOT}", PIVOT),
+    ("Long-CLIP control, aggregation b", "clip_retrieval_longclip-b", f"retrieval__{PIVOT}__b", PIVOT),
+    ('XLM-R, concat, aggregation a', "clip_retrieval", f"retrieval__{PIVOT}", PIVOT),
+    ('XLM-R, concat, aggregation b', "clip_retrieval", f"retrieval__{PIVOT}__b", PIVOT),
 
-    ("— trasaturi de interactiune —", None, None, None),
-    ("interactiune, EN → EN", "clip_retrieval", "retrieval__english__b__inter", "english"),
-    ("interactiune, EN → RO", "clip_retrieval", "retrieval__english__b__inter", "romanian_reviewed"),
-    ("interactiune, RO → RO", "clip_retrieval", "retrieval__romanian_reviewed__b__inter", "romanian_reviewed"),
+    ("— interaction features —", None, None, None),
+    ("interaction, piv → piv", "clip_retrieval", f"retrieval__{PIVOT}__b__inter", PIVOT),
+    ("interaction, piv → tgt", "clip_retrieval", f"retrieval__{PIVOT}__b__inter", TARGET),
+    ("interaction, tgt → tgt", "clip_retrieval", f"retrieval__{TARGET}__b__inter", TARGET),
 
     ('— trainable text tower —', None, None, None),
-    ("inter + turn text, EN → EN", "clip_retrieval", "retrieval__english__b__inter__tt", "english"),
-    ("inter + turn text, EN → RO", "clip_retrieval", "retrieval__english__b__inter__tt", "romanian_reviewed"),
-    ("inter + turn text, RO → RO (secv.)", "clip_retrieval",
-     "retrieval__romanian_reviewed__b__inter__tt__seq", "romanian_reviewed"),
+    ("interaction + text tower, piv → piv", "clip_retrieval", f"retrieval__{PIVOT}__b__inter__tt", PIVOT),
+    ("interaction + text tower, piv → tgt", "clip_retrieval", f"retrieval__{PIVOT}__b__inter__tt", TARGET),
+    ("interaction + text tower, tgt → tgt (seq.)", "clip_retrieval",
+     f"retrieval__{TARGET}__b__inter__tt__seq", TARGET),
 
-    ("— augmentare multilingva —", None, None, None),
-    ("augm EN+RO → EN", "clip_retrieval", "retrieval__english+romanian_reviewed__b__inter", "english"),
-    ("augm EN+RO → RO", "clip_retrieval", "retrieval__english+romanian_reviewed__b__inter", "romanian_reviewed"),
-    ("augm EN+ambele → EN", "clip_retrieval",
-     "retrieval__english+romanian+romanian_reviewed__b__inter", "english"),
-    ("augm EN+ambele → RO", "clip_retrieval",
-     "retrieval__english+romanian+romanian_reviewed__b__inter", "romanian_reviewed"),
-    ("augm EN+RO + consistenta → RO", "clip_retrieval",
-     "retrieval__english+romanian_reviewed__b__inter__cons0.5", "romanian_reviewed"),
+    ("— multilingual augmentation —", None, None, None),
+    ("augmented, piv+tgt → piv", "clip_retrieval", f"retrieval__{PIVOT}+{TARGET}__b__inter", PIVOT),
+    ("augmented, piv+tgt → tgt", "clip_retrieval", f"retrieval__{PIVOT}+{TARGET}__b__inter", TARGET),
+    ("augmented, piv+both → piv", "clip_retrieval",
+     f"retrieval__{PIVOT}+{RAW_TARGET}+{TARGET}__b__inter", PIVOT),
+    ("augmented, piv+both → tgt", "clip_retrieval",
+     f"retrieval__{PIVOT}+{RAW_TARGET}+{TARGET}__b__inter", TARGET),
+    ("augmented, piv+tgt + consistency → tgt", "clip_retrieval",
+     f"retrieval__{PIVOT}+{TARGET}__b__inter__cons0.5", TARGET),
 
-    ("— secvential (continuare din EN) —", None, None, None),
-    ("secv. RO → RO", "clip_retrieval", "retrieval__romanian_reviewed__b__inter__seq", "romanian_reviewed"),
-    ("secv. + augm EN+RO → RO", "clip_retrieval",
-     "retrieval__english+romanian_reviewed__b__inter__seq", "romanian_reviewed"),
-    ("secv. + augm ambele → RO", "clip_retrieval",
-     "retrieval__english+romanian+romanian_reviewed__b__inter__seq", "romanian_reviewed"),
-    ("secv. + augm + turn text → EN", "clip_retrieval",
-     "retrieval__english+romanian_reviewed__b__inter__tt__seq", "english"),
-    ("secv. + augm + turn text → RO", "clip_retrieval",
-     "retrieval__english+romanian_reviewed__b__inter__tt__seq", "romanian_reviewed"),
+    ("— sequential (continued from the pivot) —", None, None, None),
+    ("sequential, tgt → tgt", "clip_retrieval", f"retrieval__{TARGET}__b__inter__seq", TARGET),
+    ("sequential, + augm piv+tgt → tgt", "clip_retrieval",
+     f"retrieval__{PIVOT}+{TARGET}__b__inter__seq", TARGET),
+    ("sequential, + augm both → tgt", "clip_retrieval",
+     f"retrieval__{PIVOT}+{RAW_TARGET}+{TARGET}__b__inter__seq", TARGET),
+    ("sequential, + augm + text tower → piv", "clip_retrieval",
+     f"retrieval__{PIVOT}+{TARGET}__b__inter__tt__seq", PIVOT),
+    ("sequential, + augm + text tower → tgt", "clip_retrieval",
+     f"retrieval__{PIVOT}+{TARGET}__b__inter__tt__seq", TARGET),
 ]
 
 parser = argparse.ArgumentParser()
@@ -81,14 +89,14 @@ lines = []
 add = lines.append
 add("=" * 92)
 add('Post-retrieval predictor: variants tested')
-add(f"generat: {datetime.now():%Y-%m-%d %H:%M}")
+add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 92)
 add("")
 add('Encoder XLM-R ViT-B/32 (frozen unless stated otherwise). The retrieval')
 add('retrieval lists are reconstructed and validated against published targets.')
 add('pivot -> target means: trained on the pivot language, tested on the translation.')
 add("")
-add(f"{'varianta':<38}" + "".join(f"{LABELS[t]:>13}" for t in T))
+add(f"{'variant':<38}" + "".join(f"{LABELS[t]:>13}" for t in T))
 add("-" * 92)
 
 table, missing = [], []
@@ -99,8 +107,8 @@ for label, directory, name, language in ROWS:
         continue
     values, problem = cells(directory, name, language)
     if values is None:
-        add(f"  {label:<36}" + f"{'(' + (problem or 'lipsa') + ')':>13}")
-        missing.append((label, problem or "lipsa"))
+        add(f"  {label:<36}" + f"{'(' + (problem or 'missing') + ')':>13}")
+        missing.append((label, problem or "missing"))
         continue
     add(f"  {label:<36}" + "".join(f"{number(values.get(t)):>13}" for t in T))
     table.append({"label": label, "run": name, "test_language": language,
@@ -108,7 +116,7 @@ for label, directory, name, language in ROWS:
 
 add("")
 add("-" * 92)
-add("Cea mai buna varianta pe fiecare tinta:")
+add("Best variant per target:")
 for t in T:
     best = max((row for row in table if t in row["cells"]),
                key=lambda row: row["cells"][t])
@@ -116,13 +124,13 @@ for t in T:
 
 add("")
 add('Gain over the original code (concat, aggregation a, pivot only):')
-baseline = next((r for r in table if r["run"] == "retrieval__english"
-                 and r["test_language"] == "english"), None)
+baseline = next((r for r in table if r["run"] == f"retrieval__{PIVOT}"
+                 and r["test_language"] == PIVOT), None)
 if baseline:
     best_overall = {t: max(r["cells"][t] for r in table if t in r["cells"]) for t in T}
     add(f"  {'original':<14}" + "".join(f"{number(baseline['cells'][t]):>13}" for t in T))
-    add(f"  {'cel mai bun':<14}" + "".join(f"{number(best_overall[t]):>13}" for t in T))
-    add(f"  {'castig':<14}"
+    add(f"  {'best':<14}" + "".join(f"{number(best_overall[t]):>13}" for t in T))
+    add(f"  {'gain':<14}"
         + "".join(f"{number(best_overall[t] - baseline['cells'][t]):>13}" for t in T))
 
 if missing:
@@ -150,6 +158,6 @@ with open(json_path, "w") as handle:
                "missing": [{"label": l, "reason": p} for l, p in missing]},
               handle, indent=2, ensure_ascii=False)
 
-print(f"scris: {os.path.relpath(text_path, HERE)}")
-print(f"scris: {os.path.relpath(tsv_path, HERE)}")
-print(f"scris: {os.path.relpath(json_path, HERE)}")
+print(f"wrote: {os.path.relpath(text_path, HERE)}")
+print(f"wrote: {os.path.relpath(tsv_path, HERE)}")
+print(f"wrote: {os.path.relpath(json_path, HERE)}")

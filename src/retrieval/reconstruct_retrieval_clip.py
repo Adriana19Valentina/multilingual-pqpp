@@ -37,7 +37,7 @@ entries = sorted(
 image_ids = np.array([i for i, _ in entries], dtype=np.int64)
 paths = [p for _, p in entries]
 assert len(paths) == 118287, f"corpus neasteptat: {len(paths)}"
-print(f"corpus: {len(paths)} imagini (train2017)")
+print(f"corpus: {len(paths)} images (train2017)")
 
 class ImageDataset(Dataset):
     def __len__(self):
@@ -75,7 +75,7 @@ for split in ["train", "val", "test"]:
 
 lists = {}
 report = {}
-print(f"\n{'split':<6} {'metrica':<16} {'identic':>9} {'r':>8}   medii")
+print(f"\n{'split':<6} {'metric':<16} {'identic':>9} {'r':>8}   medii")
 for split in ["train", "val", "test"]:
     queries_frame = pd.read_csv(
         os.path.join(ROOT, "dataset", "generative", "ground_truth", "average",
@@ -134,7 +134,7 @@ for split in ["train", "val", "test"]:
         }
 
 overall = float(np.mean([v["exact_match"] for v in report.values()]))
-print(f"\npotrivire exacta, medie: {overall:.1%}")
+print(f"\nexact match, mean: {overall:.1%}")
 
 if overall < 0.95:
     raise SystemExit('Validation failed; the lists are not saved.')
@@ -145,9 +145,9 @@ np.savez_compressed(out, **{f"{s}_top{TOP_K}": v for s, v in lists.items()},
 with open(os.path.join(EMBED_DIR, "retrieval_lists_clip.manifest.json"), "w") as handle:
     json.dump(
         {"model": MODEL_ID, "library": "transformers (preprocesare CLIPImageProcessor)",
-         "corpus": "MS COCO train2017, 118287 imagini", "top_k": TOP_K,
+         "corpus": "MS COCO train2017, 118287 images", "top_k": TOP_K,
          "validation": report, "overall_exact_match": overall,
          "note": 'the query embeddings in retrieval_process/clip/ are Long-CLIP-L and do NOT correspond to the benchmark'},
         handle, indent=2, ensure_ascii=False,
     )
-print(f"scris: {os.path.relpath(out, HERE)}")
+print(f"wrote: {os.path.relpath(out, HERE)}")

@@ -36,8 +36,8 @@ for filename in os.listdir(IMAGES_DIR):
 entries.sort()
 image_ids = np.array([i for i, _ in entries], dtype=np.int64)
 paths = [p for _, p in entries]
-print(f"corpus: {len(paths)} imagini (train2017)")
-assert len(paths) == 118287, f"asteptam 118287, avem {len(paths)}"
+print(f"corpus: {len(paths)} images (train2017)")
+assert len(paths) == 118287, f"expected 118287, found {len(paths)}"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 checkpoint = hf_hub_download(HF_REPO, HF_FILE)
@@ -74,7 +74,7 @@ with torch.no_grad():
 embeddings = np.concatenate(chunks).astype(np.float32)
 assert embeddings.shape[0] == len(paths)
 print(f"\nembeddings: {embeddings.shape}  "
-      f"norma medie {np.linalg.norm(embeddings, axis=1).mean():.2f}")
+      f"mean norm {np.linalg.norm(embeddings, axis=1).mean():.2f}")
 
 npz_path = os.path.join(OUT_DIR, f"corpus_embeddings_{TAG}.npz")
 np.savez(npz_path, embeddings=embeddings, image_id=image_ids)
@@ -89,8 +89,8 @@ with open(os.path.join(OUT_DIR, f"corpus_embeddings_{TAG}.manifest.json"), "w") 
                 "checkpoint": f"{HF_REPO}/{HF_FILE}",
                 "embed_dim": int(embeddings.shape[1]),
                 "normalized": False,
-                "identified_by": "embeddings-urile de query din repo (768-d) sunt "
-                "reproduse de acest model cu cosinus 1.0000",
+                "identified_by": "the query embeddings published in the repo "
+                "(768-d) are reproduced by this model at cosine 1.0000",
             },
             "corpus": {
                 "source": "MS COCO train2017",
@@ -100,5 +100,5 @@ with open(os.path.join(OUT_DIR, f"corpus_embeddings_{TAG}.manifest.json"), "w") 
         },
         handle, indent=2, ensure_ascii=False,
     )
-print(f"scris: {os.path.relpath(npz_path, HERE)} "
+print(f"wrote: {os.path.relpath(npz_path, HERE)} "
       f"({os.path.getsize(npz_path) / 2**20:.0f} MiB)")

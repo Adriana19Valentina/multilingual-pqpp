@@ -10,16 +10,15 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import mean_squared_error, r2_score
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
+import sys as _sys
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
 
 TARGETS = {"glide": "hbpp_glide", "sdxl": "hbpp_sdxl"}
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
+SPLIT_FILES = languages.SPLIT_FILES
 
 PARAM_GRID = {"learning_rate": [1e-5, 1e-4, 5e-5], "weight_decay": [0, 0.1, 0.01]}
 NUM_EPOCHS = 25
@@ -33,19 +32,19 @@ parser.add_argument(
     help="'dims' reproduces the original code: np.corrcoef(embeddings.T), i.e. correlations between the 512 DIMENSIONS, each estimated from only 4 observations, giving a 512x512 matrix of rank at most 3. 'images' implements what the paper DESCRIBES: cosine between every pair of IMAGES, a 4x4 matrix on generation or 25x25 on retrieval, well conditioned. 'text-images' adds the prompt as a fifth element, so the matrix becomes 5x5 and its last row holds text-image similarity, the native CLIP signal that the original method discards. 'multiling' places two versions of the prompt as separate elements, giving 6x6, so disagreement between languages becomes a feature: if a translation aligns differently with the images, the prompt is probably ambiguous.")
 parser.add_argument(
     "--embed-tag", default="longclip-b",
-    help="encoderul de imagine. 'longclip-b' = cel din paper; "
-    "'xlmr-vitb32' = multilingv neadaptat; "
-    "'xlmr-vitb32-ft-romanian_reviewed' = multilingv adaptat pe romana. "
-    "Predictorul nu vede textul, dar vede embeddings, deci un encoder adaptat "
-    "pe alta limba e singura cale prin care limba il poate influenta.")
+    help="image encoder. 'longclip-b' is the one from the paper; "
+    "'xlmr-vitb32' is the unadapted multilingual encoder; "
+    "'xlmr-vitb32-ft-<language>' is the multilingual encoder adapted to the target language. "
+    "The predictor never sees the text, only embeddings, so an encoder adapted "
+    "to another language is the single route through which language can influence it.")
 args = parser.parse_args()
 
 TAG = args.embed_tag
 TARGET_COLUMN = TARGETS[args.target]
 RUN = f"{args.target}__{TAG}" + {"images": "__imgmat", "text-images": "__txtmat",
                                  "multiling": "__mlmat"}.get(args.matrix, "")
-RESULTS_DIR = os.path.join(HERE, "results", "corrcnn")
-PREDICTIONS_DIR = os.path.join(HERE, "predictions", "corrcnn")
+RESULTS_DIR = os.path.join(languages.RESULTS_DIR, "corrcnn")
+PREDICTIONS_DIR = os.path.join(languages.PREDICTIONS_DIR, "corrcnn")
 for directory in [RESULTS_DIR, PREDICTIONS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
@@ -65,10 +64,11 @@ image_npz = np.load(os.path.join(EMBED_DIR, f"image_embeddings_{TAG}.npz"), allo
 text_npz = None
 if TEXT_ITEMS:
     text_path = os.path.join(EMBED_DIR, f"text_embeddings_{TAG}.npz")
-    assert os.path.exists(text_path), f"lipseste {os.path.basename(text_path)}"
+    assert os.path.exists(text_path), f"missing {os.path.basename(text_path)}"
     text_npz = np.load(text_path, allow_pickle=True)
-    TEXT_COLUMNS = (["text_english"] if args.matrix == "text-images"
-                    else ["text_english", "text_romanian_reviewed"])
+    TEXT_COLUMNS = ([f"text_{languages.PIVOT}"] if args.matrix == "text-images"
+                    else [f"text_{languages.PIVOT}",
+                          f"text_{languages.TARGET_LANGUAGE}"])
 frames = []
 for split_name, filename in SPLIT_FILES.items():
     frame = pd.read_csv(os.path.join(DATA_DIR, filename))
@@ -94,10 +94,10 @@ if TEXT_ITEMS:
     texts = torch.from_numpy(
         np.stack([text_npz[c] for c in TEXT_COLUMNS], axis=1).astype(np.float32))
     grouped = torch.cat([texts, grouped], dim=1)
-    print(f"  elemente per prompt: {TEXT_ITEMS} text + 4 imagini = {grouped.shape[1]}")
+    print(f"  elements per prompt: {TEXT_ITEMS} text + 4 images = {grouped.shape[1]}")
 prompts["normalized_target"] = (prompts[TARGET_COLUMN] + 1) / 3
 
-print(f"run={RUN}  (correlation CNN, fara text)")
+print(f"run={RUN}  (correlation CNN, no text input)")
 print(f"  embeddings: {tuple(grouped.shape)}")
 
 def correlation_matrices(batch):
@@ -196,14 +196,14 @@ for lr in PARAM_GRID["learning_rate"]:
     for decay in PARAM_GRID["weight_decay"]:
         config = train_one_config(lr, decay)
         grid_results.append({k: v for k, v in config.items() if k != "state_dict"})
-        print(f"  lr={lr:g} wd={decay:g}  epoca {config['epoch']:>2}  "
+        print(f"  lr={lr:g} wd={decay:g}  epoch {config['epoch']:>2}  "
               f"val_MSE={config['val_mse']:.5f}", flush=True)
         if config["val_mse"] < best_overall["val_mse"]:
             best_overall = config
 
 best_config = {k: v for k, v in best_overall.items() if k != "state_dict"}
 print(f"\nBest: lr={best_config['learning_rate']:g} wd={best_config['weight_decay']:g} "
-      f"epoca {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
+      f"epoch {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
 
 model = CNNRegressor().to(device)
 model.load_state_dict(best_overall["state_dict"])
@@ -268,4 +268,4 @@ pd.DataFrame({
 
 with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
     json.dump(results, handle, indent=2, ensure_ascii=False)
-print(f"\nrezultate -> results/corrcnn/{RUN}.json")
+print(f"\nresults -> {os.path.relpath(os.path.join(RESULTS_DIR, RUN + '.json'), languages.REPO)}")

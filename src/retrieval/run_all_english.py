@@ -71,7 +71,7 @@ else:
 
     cache = os.path.join(EMBED_DIR, "corpus_embeddings_blip2.npy")
     if not os.path.exists(cache):
-        raise SystemExit(f"lipseste {cache}; ruleaza intai reconstruct_retrieval_blip2.py")
+        raise SystemExit(f"missing {cache}; run reconstruct_retrieval_blip2.py first")
     raw = np.load(cache, mmap_mode="r")
     corpus_ids_file = os.path.join(EMBED_DIR, "test2017_ids.txt")
     with open(corpus_ids_file) as handle:
@@ -113,7 +113,7 @@ else:
                 scores.append(top.values.cpu().numpy())
         return np.concatenate(ids), np.concatenate(scores)
 
-print(f"sistem={args.system}  corpus={len(image_ids)} imagini", flush=True)
+print(f"sistem={args.system}  corpus={len(image_ids)} images", flush=True)
 
 arrays, score_rows, report = {}, [], {}
 for split in SPLITS:
@@ -174,16 +174,16 @@ overall = float(np.mean([v["exact_match"] for v in report.values()]))
 with open(os.path.join(OUT_DIR, f"{args.system}_english.manifest.json"), "w") as handle:
     json.dump({
         "system": args.system,
-        "model": ("openai/clip-vit-base-patch32 prin transformers"
+        "model": ("openai/clip-vit-base-patch32 through transformers"
                   if args.system == "clip"
                   else "LAVIS blip2_feature_extractor / pretrain_vitL, spatiu 768"),
-        "corpus": "MS COCO train2017, 118287 imagini",
+        "corpus": "MS COCO train2017, 118287 images",
         "prompts": 'all 10200, in the pivot language',
         "top_k_saved": args.top_k, "search_depth_for_rr": SEARCH_DEPTH,
         "validation": report, "overall_exact_match": overall,
     }, handle, indent=2, ensure_ascii=False)
 
-print(f"\npotrivire exacta, medie: {overall:.1%}")
-print(f"scris: {os.path.relpath(npz_path, HERE)}  "
+print(f"\nexact match, mean: {overall:.1%}")
+print(f"wrote: {os.path.relpath(npz_path, HERE)}  "
       f"({os.path.getsize(npz_path) / 2**20:.0f} MiB)")
-print(f"scris: {os.path.relpath(csv_path, HERE)}")
+print(f"wrote: {os.path.relpath(csv_path, HERE)}")

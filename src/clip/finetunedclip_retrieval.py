@@ -1,7 +1,6 @@
 import argparse
 import json
 import os
-import pickle
 import random
 
 import numpy as np
@@ -10,22 +9,15 @@ import scipy.stats
 import torch
 import torch.nn as nn
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
 
-LANGUAGE_COLUMNS = {
-    "english": "caption",
-    "romanian": "caption_romanian",
-    "romanian_reviewed": "caption_romanian_reviewed",
-}
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
+LANGUAGE_COLUMNS = languages.COLUMNS
+SPLIT_FILES = languages.SPLIT_FILES
+FT_ENCODER = f"xlmr-vitb32-ft-{languages.TARGET_LANGUAGE}"
 TOP_K = 25
 PARAM_GRID = {"learning_rate": [1e-5, 1e-4, 5e-5], "weight_decay": [0, 0.1, 0.01]}
 NUM_EPOCHS = 25
@@ -46,8 +38,9 @@ parser.add_argument("--init-lr-scale", type=float, default=0.2,
 parser.add_argument(
     "--consistency", type=float, default=0.0,
     help='weight of the term forcing the same prediction across languages, computed as MSE between the outputs for one prompt in two languages; 0 disables it')
-parser.add_argument("--encoder", required=True, choices=["longclip-b", "xlmr-vitb32", "xlmr-vith14",
-                             "xlmr-vitb32-ft-romanian_reviewed"])
+parser.add_argument("--encoder", required=True,
+                    choices=["longclip-b", "xlmr-vitb32", "xlmr-vith14",
+                             FT_ENCODER])
 parser.add_argument(
     "--features", default="concat", choices=["concat", "interaction"],
     help="'concat' is [text ; image], as in the original. 'interaction' adds the element-wise product and the absolute difference: [t ; i ; t*i ; |t-i|]. This makes the text-image ALIGNMENT explicit instead of leaving the network to discover it, so the quality of the text representation matters far more.")
@@ -71,8 +64,8 @@ RUN = (f"retrieval__{'+'.join(TRAIN_LANGUAGES)}"
 USE_RANK = args.variant == "c"
 
 suffix = "clip_retrieval" if args.encoder == "xlmr-vitb32" else f"clip_retrieval_{args.encoder}"
-RESULTS_DIR = os.path.join(HERE, "results", suffix)
-PREDICTIONS_DIR = os.path.join(HERE, "predictions", suffix)
+RESULTS_DIR = os.path.join(languages.RESULTS_DIR, suffix)
+PREDICTIONS_DIR = os.path.join(languages.PREDICTIONS_DIR, suffix)
 for directory in [RESULTS_DIR, PREDICTIONS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
@@ -97,24 +90,13 @@ lists = {
     "blip2": np.load(os.path.join(EMBED_DIR, "retrieval_lists_blip2.npz")),
 }
 
-relevance = {}
-for split in SPLIT_FILES:
-    for item in pickle.load(open(os.path.join(GT_DIR, f"retrieval_{split}_gt.pickle"), "rb")):
-        relevance[(split, item["source"], int(item["index"]))] = {int(x) for x in item["gt"]}
+relevance_labels = np.load(os.path.join(EMBED_DIR, "retrieval_labels.npz"))
 
-frames, references = {}, {}
-for split in SPLIT_FILES:
-    frames[split] = pd.read_csv(os.path.join(DATA_DIR, SPLIT_FILES[split]))
-    references[split] = {
-        system: pd.read_csv(
-            os.path.join(GT_DIR, system, f"{system}_retrieval_{split}_results.csv")
-        )
-        for system in ["clip", "blip2"]
-    }
+frames = {split: pd.read_csv(languages.split_path(split)) for split in SPLIT_FILES}
 
 if args.encoder == "longclip-b":
     import sys
-    sys.path.insert(0, os.path.join(DATA_DIR, "..", "third_party"))
+    sys.path.insert(0, languages.THIRD_PARTY)
     from huggingface_hub import hf_hub_download
     from longclip_model import longclip
 
@@ -122,7 +104,8 @@ if args.encoder == "longclip-b":
         hf_hub_download("BeichenZhang/LongCLIP-B", "longclip-B.pt"), device=device
     )
     text_model.eval()
-    assert args.language == "english", 'Long-CLIP is monolingual; use it only on the pivot language'
+    assert args.language == languages.PIVOT, \
+        'Long-CLIP is monolingual; use it only on the pivot language'
 
     def encode_text(texts):
         out = []
@@ -137,16 +120,17 @@ else:
     _name, _pretrained = {
         "xlmr-vitb32": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
         "xlmr-vith14": ("xlm-roberta-large-ViT-H-14", "frozen_laion5b_s13b_b90k"),
-        "xlmr-vitb32-ft-romanian_reviewed": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
+        FT_ENCODER: ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
     }[args.encoder]
     text_model, _, _ = open_clip.create_model_and_transforms(_name, pretrained=_pretrained)
     if "-ft-" in args.encoder:
 
         _lang = args.encoder.split("-ft-")[1]
-        _ck = torch.load(os.path.join(HERE, "checkpoints", f"clip_finetuned_{_lang}.pt"),
+        _ck = torch.load(os.path.join(languages.CHECKPOINT_ROOT, "clip",
+                                     f"clip_finetuned_{_lang}.pt"),
                          map_location="cpu", weights_only=False)
         text_model.load_state_dict(_ck["model_state_dict"])
-        print(f"greutati adaptate pentru text: R@1 "
+        print(f"adapted text weights: R@1 "
               f"{_ck['baseline_recall@1']:.3f} -> {_ck['recall@1']:.3f}")
     tokenizer = open_clip.get_tokenizer(_name)
     text_model.eval().to(device)
@@ -169,7 +153,6 @@ def compose(text_block, image_block):
 
 def image_matrix(split):
     frame = frames[split]
-    reference = references[split]["clip"]
     rows = np.stack([
         [row_of_image[int(i)] for i in np.concatenate([
             lists["clip"][f"{split}_top{TOP_K}"][position],
@@ -179,18 +162,7 @@ def image_matrix(split):
     return torch.from_numpy(image_features[rows.reshape(-1)]).view(len(frame), 50, -1)
 
 def labels_for(split):
-    frame = frames[split]
-    reference = references[split]["clip"]
-    out = []
-    for position in range(len(frame)):
-        relevant = relevance.get(
-            (split, frame.iloc[position]["source"],
-             int(reference.iloc[position]["index"])), set())
-        retrieved = np.concatenate([
-            lists["clip"][f"{split}_top{TOP_K}"][position],
-            lists["blip2"][f"{split}_top{TOP_K}"][position]])
-        out.append([1.0 if int(i) in relevant else 0.0 for i in retrieved])
-    return torch.tensor(out, dtype=torch.float32)
+    return torch.tensor(relevance_labels[f"{split}_labels"], dtype=torch.float32)
 
 def tokens_for(split, language=None):
     column = LANGUAGE_COLUMNS[language or args.language]
@@ -199,14 +171,10 @@ def tokens_for(split, language=None):
 def build(split, language=None):
     frame = frames[split]
     texts = encode_text([str(x) for x in frame[LANGUAGE_COLUMNS[language or args.language]]])
-    reference = references[split]["clip"]
+    split_labels = relevance_labels[f"{split}_labels"]
 
     features, labels = [], []
     for position in range(len(frame)):
-        source = frame.iloc[position]["source"]
-        index = int(reference.iloc[position]["index"])
-        relevant = relevance.get((split, source, index), set())
-
         retrieved = np.concatenate([
             lists["clip"][f"{split}_top{TOP_K}"][position],
             lists["blip2"][f"{split}_top{TOP_K}"][position],
@@ -220,7 +188,7 @@ def build(split, language=None):
             ranks = np.tile(np.arange(1, TOP_K + 1, dtype=np.float32), 2)
             block += [(ranks / TOP_K)[:, None], (1.0 / ranks)[:, None]]
         features.append(np.hstack(block))
-        labels.append(np.array([1.0 if int(i) in relevant else 0.0 for i in retrieved]))
+        labels.append(split_labels[position].astype(np.float32))
     return (
         torch.from_numpy(np.concatenate(features).astype(np.float32)).to(device),
         torch.from_numpy(np.concatenate(labels).astype(np.float32)).to(device),
@@ -238,10 +206,10 @@ else:
 
     val_x, val_y = build("val")
     if len(TRAIN_LANGUAGES) > 1:
-        print(f"  antrenare pe {len(TRAIN_LANGUAGES)} limbi: {', '.join(TRAIN_LANGUAGES)}")
-print(f"run={RUN}  encoder={args.encoder}  limba={args.language}")
+        print(f"  training on {len(TRAIN_LANGUAGES)} languages: {', '.join(TRAIN_LANGUAGES)}")
+print(f"run={RUN}  encoder={args.encoder}  language={args.language}")
 if train_x is not None:
-    print(f"  train={tuple(train_x.shape)}  pozitive={train_y.mean():.1%}")
+    print(f"  train={tuple(train_x.shape)}  positives={train_y.mean():.1%}")
 
 class NeuralNetworkClassifier(nn.Module):
     def __init__(self):
@@ -270,7 +238,7 @@ if args.init_from:
     INIT = torch.load(args.init_from, map_location="cpu", weights_only=False)
     assert INIT["input_dim"] == INPUT_DIM, (
         f"checkpointul are input_dim={INIT['input_dim']}, rularea curenta {INPUT_DIM}")
-    print(f"initializat din {os.path.basename(args.init_from)} "
+    print(f"initialised from {os.path.basename(args.init_from)} "
           f"(antrenat pe {'+'.join(INIT['train_languages'])}), "
           f"lr x{args.init_lr_scale:g}")
 
@@ -359,7 +327,7 @@ def train_one_config(lr, decay):
                 for i in range(0, len(val_tokens), QUERY_BATCH)
             ]
         val_loss = float(np.mean(losses))
-        print(f"    epoca {epoch + 1}/{NUM_EPOCHS} val_BCE={val_loss:.5f}", flush=True)
+        print(f"    epoch {epoch + 1}/{NUM_EPOCHS} val_BCE={val_loss:.5f}", flush=True)
         if val_loss < best["val_loss"]:
             best = {"learning_rate": lr, "weight_decay": decay, "epoch": epoch + 1,
                     "val_loss": val_loss,
@@ -375,7 +343,7 @@ for lr in PARAM_GRID["learning_rate"]:
     for decay in PARAM_GRID["weight_decay"]:
         config = train_one_config(lr, decay)
         grid.append({k: v for k, v in config.items() if k != "state_dict"})
-        print(f"  lr={lr:g} wd={decay:g}  epoca {config['epoch']:>2}  "
+        print(f"  lr={lr:g} wd={decay:g}  epoch {config['epoch']:>2}  "
               f"val_BCE={config['val_loss']:.5f}", flush=True)
         if config["val_loss"] < best_overall["val_loss"]:
             best_overall = config
@@ -383,7 +351,7 @@ for lr in PARAM_GRID["learning_rate"]:
 best_config = {k: v for k, v in best_overall.items()
                if k not in ("state_dict", "text_state_dict")}
 print(f"\nBest: lr={best_config['learning_rate']:g} wd={best_config['weight_decay']:g} "
-      f"epoca {best_config['epoch']}  val_BCE={best_config['val_loss']:.5f}")
+      f"epoch {best_config['epoch']}  val_BCE={best_config['val_loss']:.5f}")
 
 model = NeuralNetworkClassifier().to(device)
 model.load_state_dict(best_overall["state_dict"])
@@ -428,12 +396,13 @@ def aggregate(prediction_list):
 
 test_frame = frames["test"]
 
-eval_languages = ["english"] if args.encoder == "longclip-b" else list(LANGUAGE_COLUMNS)
+eval_languages = ([languages.PIVOT] if args.encoder == "longclip-b"
+                  else list(LANGUAGE_COLUMNS))
 targets = {
-    "clip_p10": references["test"]["clip"]["precision"].to_numpy(),
-    "clip_rr": references["test"]["clip"]["reciprocal_rank"].to_numpy(),
-    "blip2_p10": references["test"]["blip2"]["precision"].to_numpy(),
-    "blip2_rr": references["test"]["blip2"]["reciprocal_rank"].to_numpy(),
+    "clip_p10": test_frame["p10_clip"].to_numpy(),
+    "clip_rr": test_frame["rr_clip"].to_numpy(),
+    "blip2_p10": test_frame["p10_blip2"].to_numpy(),
+    "blip2_rr": test_frame["rr_blip2"].to_numpy(),
 }
 
 def evaluate_target(target, values):
@@ -507,4 +476,4 @@ torch.save(checkpoint, os.path.join(RESULTS_DIR, f"{RUN}.pth"))
 
 with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
     json.dump(results, handle, indent=2, ensure_ascii=False)
-print(f"\nrezultate -> results/{suffix}/{RUN}.json")
+print(f"\nresults -> {os.path.relpath(os.path.join(RESULTS_DIR, RUN + '.json'), languages.REPO)}")

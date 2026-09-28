@@ -12,21 +12,14 @@ from sklearn.metrics import mean_squared_error, r2_score
 from torch.utils.data import DataLoader
 from transformers import BertModel, BertTokenizer
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
 
-LANGUAGE_COLUMNS = {
-    "english": "caption",
-    "romanian": "caption_romanian",
-    "romanian_reviewed": "caption_romanian_reviewed",
-    "french": "caption_french",
-}
-STUDY_LANGUAGES = ["english", "romanian", "romanian_reviewed"]
+DATA_DIR = languages.DATA_DIR
+SPLIT_FILES = languages.SPLIT_FILES
+LANGUAGE_COLUMNS = languages.COLUMNS
+STUDY_LANGUAGES = languages.LANGUAGES
 
 TARGETS = {
     "glide": ("hbpp_glide", "generative"),
@@ -94,9 +87,9 @@ TEXT_COLUMN = LANGUAGE_COLUMNS[args.language]
 TARGET_COLUMN, TARGET_FAMILY = TARGETS[args.target]
 RUN = f"{args.target}__{args.language}"
 
-CHECKPOINT_DIR = os.path.join(HERE, "checkpoints", RUN)
-RESULTS_DIR = os.path.join(HERE, "results")
-PREDICTIONS_DIR = os.path.join(HERE, "predictions")
+CHECKPOINT_DIR = os.path.join(languages.CHECKPOINT_ROOT, "bert", RUN)
+RESULTS_DIR = languages.RESULTS_DIR
+PREDICTIONS_DIR = languages.PREDICTIONS_DIR
 BEST_CHECKPOINT = os.path.join(CHECKPOINT_DIR, "best.pth")
 GRID_RESULTS_PATH = os.path.join(CHECKPOINT_DIR, "grid_results.json")
 
@@ -133,10 +126,10 @@ for name, df in splits.items():
         else [LANGUAGE_COLUMNS[language] for language in eval_languages]
     )
     for column in needed:
-        assert column in df.columns, f"{name}: lipseste coloana {column}"
-        assert df[column].notna().all(), f"{name}: valori lipsa in {column}"
+        assert column in df.columns, f"{name}: column {column} is missing; check COLUMNS in src/languages.py"
+        assert df[column].notna().all(), f"{name}: missing values in {column}"
     df["normalized_target"] = normalize(df[TARGET_COLUMN])
-    assert df["normalized_target"].between(0, 1).all(), f"{name}: tinta in afara [0, 1]"
+    assert df["normalized_target"].between(0, 1).all(), f"{name}: target outside [0, 1]"
 
 train_data, eval_data, test_data = splits["train"], splits["val"], splits["test"]
 print(f"run={RUN}")
@@ -316,14 +309,14 @@ for lr in PARAM_GRID["learning_rate"]:
                     config_best = json.load(handle)
                 print(
                     f"  lr={lr:g} wd={decay:g} deja rulat -> se refoloseste "
-                    f"(epoca {config_best['epoch']}, val_MSE={config_best['val_mse']:.5f})"
+                    f"(epoch {config_best['epoch']}, val_MSE={config_best['val_mse']:.5f})"
                 )
             else:
                 try:
                     config_best = train_one_config(lr, decay, epochs)
                 except torch.cuda.OutOfMemoryError:
 
-                    print(f"  !! lr={lr:g} wd={decay:g} CUDA OOM, se trece mai departe")
+                    print(f"  !! lr={lr:g} wd={decay:g} CUDA OOM, skipping")
                     torch.cuda.empty_cache()
                     continue
 
@@ -342,9 +335,9 @@ if not best_params:
     raise SystemExit('No configuration completed successfully; nothing to evaluate.')
 if not complete:
     print(
-        f"\nATENTIE: {expected - len(grid_results)}/{expected} configuratii lipsesc (OOM). "
-        f"Reporneste ca sa le reia -- pana atunci rezultatul NU e comparabil cu "
-        f"rulari care au parcurs grila intreaga."
+        f"\nWARNING: {expected - len(grid_results)}/{expected} configurations are "
+        f"missing (OOM). Rerun to pick them up; until then the result is NOT "
+        f"comparable with runs that completed the whole grid."
     )
 
 with open(GRID_RESULTS_PATH, "w") as handle:
@@ -365,10 +358,10 @@ if not args.keep_checkpoints and complete:
         if filename.endswith(".pth") and filename != "best.pth":
             os.remove(os.path.join(CHECKPOINT_DIR, filename))
             removed += 1
-    print(f"  (sterse {removed} checkpointuri necastigatoare; --keep-checkpoints le pastreaza)")
+    print(f"  ({removed} non-winning checkpoints deleted; --keep-checkpoints preserves them)")
 
 print(f"\nBest: lr={best_params['learning_rate']:g} wd={best_params['weight_decay']:g} "
-      f"epoca {best_params['epoch']}  val_MSE={best_mse:.5f}")
+      f"epoch {best_params['epoch']}  val_MSE={best_mse:.5f}")
 
 model = BertRegressor().to(device)
 model.load_state_dict(torch.load(BEST_CHECKPOINT)["model_state_dict"])
@@ -456,4 +449,4 @@ for language in eval_languages:
 with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
     json.dump(results, handle, indent=2, ensure_ascii=False)
 
-print(f"\nrezultate -> results/{RUN}.json")
+print(f"\nresults -> {os.path.relpath(os.path.join(RESULTS_DIR, RUN + '.json'), languages.REPO)}")

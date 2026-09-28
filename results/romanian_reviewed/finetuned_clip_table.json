@@ -1,6 +1,6 @@
 {
-  "generated": "2026-09-22T09:45:13",
-  "predictor": "fine-tuned CLIP (CLIP inghetat, se antreneaza capul MLP)",
+  "generated": "2026-09-28T08:32:30",
+  "predictor": "fine-tuned CLIP (CLIP frozen, the MLP head is trained)",
   "paper_baseline": {
     "encoder": "Long-CLIP",
     "values": {
@@ -35,7 +35,7 @@
       "variant": "control",
       "train_language": "english",
       "test_language": "english",
-      "label": "Control (Long-CLIP), engleza",
+      "label": "Control (Long-CLIP), pivot",
       "cells": {
         "glide": {
           "n": 2080,
@@ -107,7 +107,7 @@
       "variant": "xlmr",
       "train_language": "english",
       "test_language": "english",
-      "label": "XLM-R, engleza",
+      "label": "XLM-R, pivot",
       "cells": {
         "glide": {
           "n": 2080,
@@ -179,7 +179,7 @@
       "variant": "xlmr",
       "train_language": "english",
       "test_language": "romanian",
-      "label": "EN -> RO (brut)",
+      "label": "pivot -> target (raw MT)",
       "cells": {
         "glide": {
           "n": 2080,
@@ -251,7 +251,7 @@
       "variant": "xlmr",
       "train_language": "english",
       "test_language": "romanian_reviewed",
-      "label": "EN -> RO (revizuit)",
+      "label": "pivot -> target",
       "cells": {
         "glide": {
           "n": 2080,
@@ -323,7 +323,7 @@
       "variant": "xlmr",
       "train_language": "romanian_reviewed",
       "test_language": "romanian_reviewed",
-      "label": "XLM-R, romana revizuita",
+      "label": "XLM-R, target language",
       "cells": {
         "glide": {
           "n": 2080,
@@ -395,7 +395,7 @@
       "variant": "xlmr",
       "train_language": "romanian_reviewed",
       "test_language": "english",
-      "label": "RO -> EN",
+      "label": "target -> pivot",
       "cells": {
         "glide": {
           "n": 2080,

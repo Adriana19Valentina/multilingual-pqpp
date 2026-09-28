@@ -10,20 +10,20 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import mean_squared_error, r2_score
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
+import sys as _sys
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
 DEFAULT_TAG = "xlmr-vitb32"
 
-ALL_LANGUAGES = ["english", "romanian", "romanian_reviewed"]
+ALL_LANGUAGES = languages.LANGUAGES
+LANGUAGES = languages.LANGUAGES
 
 TARGETS = {"glide": "hbpp_glide", "sdxl": "hbpp_sdxl"}
 
-SPLIT_FILES = {
-    "train": "pqpp_multilingual_train.csv",
-    "val": "pqpp_multilingual_val.csv",
-    "test": "pqpp_multilingual_test.csv",
-}
+SPLIT_FILES = languages.SPLIT_FILES
 
 PARAM_GRID = {"learning_rate": [1e-5, 1e-4, 5e-5], "weight_decay": [0, 0.1, 0.01]}
 NUM_EPOCHS = 100
@@ -57,8 +57,8 @@ TARGET_COLUMN = TARGETS[args.target]
 RUN = f"{args.target}__{args.language}"
 
 suffix = "clip" if TAG == DEFAULT_TAG else f"clip_{TAG}"
-RESULTS_DIR = os.path.join(HERE, "results", suffix)
-PREDICTIONS_DIR = os.path.join(HERE, "predictions", suffix)
+RESULTS_DIR = os.path.join(languages.RESULTS_DIR, suffix)
+PREDICTIONS_DIR = os.path.join(languages.PREDICTIONS_DIR, suffix)
 for directory in [RESULTS_DIR, PREDICTIONS_DIR]:
     os.makedirs(directory, exist_ok=True)
 
@@ -96,7 +96,7 @@ INPUT_DIM = 2 * EMBED_DIM
 
 LANGUAGES = [lang for lang in ALL_LANGUAGES if f"text_{lang}" in text_npz.files]
 assert args.language in LANGUAGES, (
-    f"embeddings-urile '{TAG}' nu contin limba {args.language}; disponibile: {LANGUAGES}"
+    f"embeddings-urile '{TAG}' do not contain language {args.language}; disponibile: {LANGUAGES}"
 )
 text_features = {language: text_npz[f"text_{language}"] for language in LANGUAGES}
 
@@ -117,7 +117,7 @@ assert (rows_by_prompt >= 0).all()
 if args.images == "target":
     keep = [slot for slot, generator in enumerate(generator_by_slot)
             if generator == args.target]
-    assert len(keep) == 2, f"asteptam 2 imagini pentru {args.target}"
+    assert len(keep) == 2, f"expected 2 images for {args.target}"
 else:
     keep = list(range(4))
 IMAGES_PER_PROMPT = len(keep)
@@ -146,7 +146,7 @@ def build(split, language):
 train_x, train_y, _, _ = build("train", args.language)
 val_x, _, val_prompt_y, _ = build("val", args.language)
 
-print(f"run={RUN}  (CLIP, {args.normalize}, imagini={args.images})")
+print(f"run={RUN}  (CLIP, {args.normalize}, images={args.images})")
 print(f"  train={tuple(train_x.shape)}  val={tuple(val_x.shape)}")
 
 class NeuralNetworkRegressor(nn.Module):
@@ -207,14 +207,14 @@ for lr in PARAM_GRID["learning_rate"]:
     for decay in PARAM_GRID["weight_decay"]:
         config = train_one_config(lr, decay)
         grid_results.append({k: v for k, v in config.items() if k != "state_dict"})
-        print(f"  lr={lr:g} wd={decay:g}  epoca {config['epoch']:>3}  "
+        print(f"  lr={lr:g} wd={decay:g}  epoch {config['epoch']:>3}  "
               f"val_MSE={config['val_mse']:.5f}")
         if config["val_mse"] < best_overall["val_mse"]:
             best_overall = config
 
 best_config = {k: v for k, v in best_overall.items() if k != "state_dict"}
 print(f"\nBest: lr={best_config['learning_rate']:g} wd={best_config['weight_decay']:g} "
-      f"epoca {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
+      f"epoch {best_config['epoch']}  val_MSE={best_config['val_mse']:.5f}")
 
 model = NeuralNetworkRegressor().to(device)
 model.load_state_dict(best_overall["state_dict"])
@@ -294,4 +294,4 @@ for language in LANGUAGES:
 
 with open(os.path.join(RESULTS_DIR, f"{RUN}.json"), "w") as handle:
     json.dump(results, handle, indent=2, ensure_ascii=False)
-print(f"\nrezultate -> results/clip/{RUN}.json")
+print(f"\nresults -> {os.path.relpath(os.path.join(RESULTS_DIR, RUN + '.json'), languages.REPO)}")

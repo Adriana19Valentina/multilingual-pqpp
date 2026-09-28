@@ -1,0 +1,46 @@
+======================================================================================================================
+Correlation CNN -- post-generation / post-retrieval predictor
+generated: 2026-09-28 08:32
+======================================================================================================================
+
+The input is a 512x512 correlation matrix between embedding dimensions,
+computed over the prompt's images. The text NEVER enters the model:
+`retrieve_embeddings` exists in the original code but is never called.
+
+That is why the table has a single row of results. A 'multilingual' variant
+would give bit-for-bit identical numbers. The image encoder is Long-CLIP, the
+one from the paper, the only one comparable with Table 3.
+
+‡ p < 0.001   † p < 0.01   -- against the random baseline
+
+                                        GLIDE HBPP         SDXL HBPP         CLIP P@10           CLIP RR       BLIP-2 P@10         BLIP-2 RR
+                                  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall  Pearson  Kendall
+                                        generation        generation         retrieval         retrieval         retrieval         retrieval
+--------------------------------------------------------------------------------------------------------------------------------------------
+PQPP paper                         0.548‡   0.393‡   0.159‡   0.107‡   0.270‡   0.186‡   0.189‡   0.162‡   0.159‡   0.133‡   0.206‡   0.158‡
+Rulat de noi                       0.553‡   0.397‡   0.178‡   0.119‡   0.336‡   0.178‡   0.184‡   0.129‡   0.322‡   0.194‡   0.119‡   0.082‡
+  ^ delta vs paper                  0.005    0.004    0.019    0.012    0.066   -0.008   -0.005   -0.033    0.163    0.061   -0.087   -0.076
+
+Pe subseturi (Pearson):
+  target      total     mscoco    drawbench   
+  glide       0.553     0.559     0.399       
+  sdxl        0.178     0.181     0.209       
+  clip_p10    0.336     0.330     0.018       
+  clip_rr     0.184     0.214     0.043       
+  blip2_p10   0.322     0.309     -0.066      
+  blip2_rr    0.119     0.136     -0.003      
+
+The configuration differs between tasks, as it does in the original code:
+              images    convolutions          fc1               output    
+  generation  4         3 layers (16-64)      262144 -> 512     sigmoid   
+  retrieval   25        4 layers (32-64)      65536 -> 1024     ReLU      
+
+The image count matters: the matrix has rank at most (images - 1), so
+on generation it is strongly degenerate (rank <= 3), while on retrieval it is far
+better conditioned (rank <= 24).
+
+Limitation to report: the original code packs the two retrieval matrices
+as [2, 512, 512] and uses the AVERAGED target, but the architecture
+accepts a single channel, while Table 3 reports per system. The two cannot
+be reconciled; the variant compatible with the table was chosen -- one model per
+(system, metric). This probably explains the larger deviations on retrieval.

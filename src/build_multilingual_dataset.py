@@ -41,11 +41,11 @@ def retrieval(model, split):
 
 for split, filename in TRANSLATED.items():
     base = pd.read_csv(os.path.join(OUT_DIR, filename))
-    assert len(base) == EXPECTED_SIZES[split], f"{split}: {len(base)} randuri"
+    assert len(base) == EXPECTED_SIZES[split], f"{split}: {len(base)} rows"
 
     merged = base[["caption_id", "caption", "source"] + TRANSLATION_COLUMNS].copy()
     merged["_key"] = key(base["caption"])
-    assert merged["_key"].is_unique, f"{split}: prompturi duplicate, lipirea pe text nu e sigura"
+    assert merged["_key"].is_unique, f"{split}: duplicate prompts, joining on text is not safe"
 
     sources = (
         [generative(m, split) for m in ["glide", "sdxl", "average"]]
@@ -56,7 +56,7 @@ for split, filename in TRANSLATED.items():
         assert table["_key"].is_unique, f"{split}: chei duplicate intr-o sursa"
         before = len(merged)
         merged = merged.merge(table, on="_key", how="inner", validate="one_to_one")
-        assert len(merged) == before, f"{split}: {before - len(merged)} prompturi nepotrivite"
+        assert len(merged) == before, f"{split}: {before - len(merged)} prompts left unmatched"
 
     merged = merged.rename(
         columns={
@@ -71,15 +71,15 @@ for split, filename in TRANSLATED.items():
     assert ((merged.rr_clip + merged.rr_blip2) / 2 - merged.rr_average).abs().max() < 1e-9
 
     for column in ["hbpp_glide", "hbpp_sdxl", "hbpp_average"]:
-        assert merged[column].between(-1, 2).all(), f"{split}: {column} in afara [-1, 2]"
+        assert merged[column].between(-1, 2).all(), f"{split}: {column} outside [-1, 2]"
     for column in ["p10_clip", "rr_clip", "p10_blip2", "rr_blip2", "p10_average", "rr_average"]:
-        assert merged[column].between(0, 1).all(), f"{split}: {column} in afara [0, 1]"
+        assert merged[column].between(0, 1).all(), f"{split}: {column} outside [0, 1]"
 
     for column in TRANSLATION_COLUMNS:
-        assert merged[column].notna().all(), f"{split}: traduceri lipsa in {column}"
+        assert merged[column].notna().all(), f"{split}: missing translations in {column}"
 
     assert (merged.caption_id.values == base.caption_id.values).all(), f"{split}: ordine schimbata"
-    assert ((merged.hbpp_average - base.score).abs().max() < 1e-9), f"{split}: tinta veche difera"
+    assert ((merged.hbpp_average - base.score).abs().max() < 1e-9), f"{split}: previous target differs"
 
     merged["score"] = merged["hbpp_average"]
 
