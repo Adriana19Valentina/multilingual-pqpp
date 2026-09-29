@@ -70,8 +70,8 @@ if TEXT_ITEMS:
                     else [f"text_{languages.PIVOT}",
                           f"text_{languages.TARGET_LANGUAGE}"])
 frames = []
-for split_name, filename in SPLIT_FILES.items():
-    frame = pd.read_csv(os.path.join(DATA_DIR, filename))
+for split_name in SPLIT_FILES:
+    frame = languages.load_split(split_name)
     frame["split"] = split_name
     frames.append(frame)
 prompts = pd.concat(frames, ignore_index=True)

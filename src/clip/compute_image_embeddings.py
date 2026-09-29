@@ -58,8 +58,8 @@ def folder_for(caption_id, source):
     raise ValueError(f"sursa necunoscuta: {source}")
 
 splits = {
-    name: pd.read_csv(os.path.join(HERE, filename))
-    for name, filename in SPLIT_FILES.items()
+    name: languages.load_split(name)
+    for name in SPLIT_FILES
 }
 
 index_rows = []

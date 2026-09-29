@@ -59,11 +59,11 @@ prompt coverage; only the time per run does.
 
 | step | configurations | runs | grid | epochs | approx. time each |
 |---|---|---|---|---|---|
-| 5. BERT | both | 12 (6 targets × 2) | 9 | 15 | 20 min |
-| 6. CLIP, generation | both | 4 (2 targets × 2) | 9 | 100 | 2 min |
-| 6. CLIP, retrieval | both | 2 (each gives all 4 cells) | 9 | 25 | 20 min, or 3 h with `--train-text-tower` |
-| 7. CNN, generation | n/a | 2 | 9 | 25 | 5 min |
-| 7. CNN, retrieval | n/a | 4 | 9 | 25 | 1 h |
+| 4. BERT | both | 12 (6 targets × 2) | 9 | 15 | 20 min |
+| 5. CLIP, generation | both | 4 (2 targets × 2) | 9 | 100 | 2 min |
+| 5. CLIP, retrieval | both | 2 (each gives all 4 cells) | 9 | 25 | 20 min, or 3 h with `--train-text-tower` |
+| 6. CNN, generation | n/a | 2 | 9 | 25 | 5 min |
+| 6. CNN, retrieval | n/a | 4 | 9 | 25 | 1 h |
 
 Times are for an RTX 3090: roughly 9 hours in total, or 14 with
 `--train-text-tower`.
@@ -84,7 +84,7 @@ language:
 - the per-query P@10 and RR ground truth
 
 Only the text embeddings depend on your language, and they take seconds
-(step 4).
+(step 3).
 
 ## Prompt coverage
 
@@ -134,61 +134,23 @@ python src/fetch_precomputed.py --bundle xlmr longclip
 The download is about 420 MB. Check what you already have with
 `python src/fetch_precomputed.py --check`.
 
-## 2. Merge your translations
+## 2. Your language
 
-The translation files live here:
+Download the file for your language from
 
 <https://drive.google.com/drive/folders/174k389hDM8cno6PrAw59VlB999w65dKX>
 
-Download the one for your language and merge it:
+and put it in `data/`. Nothing else is done to it: it is read as it is, on every
+run, and never written back to.
 
-```bash
-python src/add_translations.py path/to/final_reviewed_italian.csv
-python src/add_translations.py path/to/final_reviewed_italian.csv --write
-```
-
-The first call only reports what it would do, the second writes. Several files or
-a glob also work: `python src/add_translations.py "translations/*.csv"`.
-
-You do **not** have to split the file into train / validation / test, or sort it,
-or keep any particular row order. The script matches each row to the prompt it
-belongs to and works out its split.
-
-**What the file needs.** The translation columns must be named
-`caption_<language>`, for example `caption_italian_reviewed`. For identifying the
-prompts, either is fine:
-
-- `caption_id` and `source` — preferred, exact
-- a `caption` column with the original English prompt — used automatically if
-  the two above are absent, compared case- and whitespace-insensitively
-
-A `split` column is optional and is **not** used to define the splits: those come
-from this repository, and they are the ones the paper's numbers were computed on.
-If the column is present the script checks it against them and reports the
-agreement, for example `split column: 10200/10200 rows agree with the published
-split`. Values like `train_part1`, `train_part2`, `validation` or `dev` are
-recognised and normalised. A mismatch is reported as a warning, with a table of
-what moved where, because results computed on a different split are comparable
-neither with Table 3 nor with the other languages.
-
-The script also checks the English captions, when your file carries them, and
-reports any row whose English text differs from ours even though the id matched —
-usually an editing artefact, harmless, but worth knowing about.
-
-**You do not need all 10,200 prompts.** Translate as many as you have; the script
-reports the count and carries on. Untranslated prompts are then dropped from
-every language alike, so the comparison stays row-for-row. Do not reshuffle the
-splits themselves — they stay 6,080 train / 2,040 validation / 2,080 test.
-
-## 3. Configure `src/languages.py`
-
-This file is the only place where the language is declared. It already holds one
-block per language — Romanian, French, Italian, Hindi, Danish, Arabic. Uncomment
-yours and comment out the rest. Italian is active by default:
+Then uncomment your block in `src/languages.py` and comment out the rest.
+Italian is active by default:
 
 ```python
 # --- Italian ---
 TARGET_LANGUAGE = "italian_reviewed"
+
+TRANSLATION_FILE = "final_reviewed_italian.csv"
 
 RAW_TARGET_LANGUAGE = None
 
@@ -203,41 +165,52 @@ LABELS = {
 }
 ```
 
-If your language is not listed, copy any block and change the four names. The
-column names must match the ones you merged in step 2.
+There is one block per language — Romanian, French, Italian, Hindi, Danish,
+Arabic. If yours is not there, copy any block and change the names.
 
-`TARGET_LANGUAGE` is the variant every model is trained and reported on, so it
-is the reviewed one. It also sets the results folder: everything is written to
-`results/italian_reviewed/`. To use a different folder name, set
-`RESULTS_SUBDIR` in the same file.
+`TRANSLATION_FILE` supplies both the translations and the train / validation /
+test assignment, through its `split` column. Values like `train_part1` and
+`train_part2` are recognised. You do not have to split the file, sort it, or keep
+any particular row order.
 
-`RAW_TARGET_LANGUAGE` is for the unreviewed machine translation, if your file has
-that column as well as the reviewed one. It is evaluated but never trained on, and
-it adds one comparison row to the tables, showing whether human review of the
-translation made a difference. Leave it `None` when you only have the reviewed
-column, as in the Italian file.
+`TARGET_LANGUAGE` is the variant every model is trained and reported on, and it
+names the results folder: everything goes to `results/italian_reviewed/`.
 
-Every language you declare in `COLUMNS` must be non-empty for a prompt to be
-used, so declare only the ones you report.
+`RAW_TARGET_LANGUAGE` is for an unreviewed machine-translation column, if your
+file has one beside the reviewed one. It is evaluated but never trained on, and
+adds one comparison row. Leave it `None` otherwise.
 
-Then check the configuration:
+Every language declared in `COLUMNS` must be non-empty for a prompt to be used,
+so declare only the ones you report.
+
+Then check it:
 
 ```bash
 python src/languages.py
 ```
 
-It must print `ok` for every language on all three splits.
+It must print `ok` for every language on all three splits:
 
-## 4. Text embeddings
+```
+train     6080 rows   english=ok   italian_reviewed=ok
+val       2040 rows   english=ok   italian_reviewed=ok
+test      2080 rows   english=ok   italian_reviewed=ok
+```
+
+Anything else is a real problem and every later step will fail on it: a missing
+file, a column named differently from `COLUMNS`, a `split` column that does not
+cover all 10,200 prompts, or one that assigns them differently from the
+benchmark. The message says which.
+
+## 3. Text embeddings
 
 ```bash
 python src/clip/compute_text_embeddings.py --encoder xlmr-vitb32
 ```
 
-One pass over 10,200 prompts per language. Takes seconds. Needed by steps 6
-and 7.
+One pass over 10,200 prompts per language. Takes seconds. Needed by steps 5 and 6.
 
-## 5. Fine-tuned BERT — 12 runs
+## 4. Fine-tuned BERT — 12 runs
 
 Configuration 1, trained on English, tested on your language:
 
@@ -261,7 +234,7 @@ the text, so it is where translation hurts most — expect the largest drop here
 Each run writes `results/italian_reviewed/<target>__italian_reviewed.json`. The
 grid can be interrupted and resumed: finished configurations are skipped.
 
-## 6. Fine-tuned CLIP — 6 runs
+## 5. Fine-tuned CLIP — 6 runs
 
 Generation, one run per system per configuration:
 
@@ -292,7 +265,7 @@ The three flags are worth about +0.14 to +0.20 Pearson over the original
 formulation. Drop `--train-text-tower` for a much faster first pass; the other
 two cost nothing.
 
-## 7. Correlation CNN — 6 runs, one configuration
+## 6. Correlation CNN — 6 runs, one configuration
 
 Generation:
 
@@ -314,7 +287,7 @@ images, so its numbers are identical in every language. Run it anyway: it is the
 control that shows the drop in the other two predictors comes from the text and
 not from something else.
 
-## 8. Tables
+## 7. Tables
 
 ```bash
 python src/export_results.py

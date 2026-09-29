@@ -57,8 +57,8 @@ retrieval_lists = np.load(os.path.join(EMBED_DIR, f"retrieval_lists_{SYSTEM}.npz
 
 frames, targets, grouped = {}, {}, {}
 print("coverage:")
-for split, filename in SPLIT_FILES.items():
-    frame = pd.read_csv(os.path.join(DATA_DIR, filename))
+for split in SPLIT_FILES:
+    frame = languages.load_split(split)
     mask = languages.usable_mask(frame)
     languages.report_coverage(split, mask)
     frames[split] = frame[mask].reset_index(drop=True)

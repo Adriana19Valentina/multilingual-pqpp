@@ -72,8 +72,8 @@ text_npz = np.load(os.path.join(EMBED_DIR, f"text_embeddings_{TAG}.npz"), allow_
 image_npz = np.load(os.path.join(EMBED_DIR, f"image_embeddings_{TAG}.npz"), allow_pickle=True)
 
 frames = []
-for split_name, filename in SPLIT_FILES.items():
-    frame = pd.read_csv(os.path.join(DATA_DIR, filename))
+for split_name in SPLIT_FILES:
+    frame = languages.load_split(split_name)
     frame["split"] = split_name
     frames.append(frame)
 prompts = pd.concat(frames, ignore_index=True)

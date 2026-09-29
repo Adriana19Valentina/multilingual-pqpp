@@ -114,10 +114,7 @@ def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-splits = {
-    name: pd.read_csv(os.path.join(DATA_DIR, filename))
-    for name, filename in SPLIT_FILES.items()
-}
+splits = languages.load_splits()
 
 print("coverage:")
 for name in list(splits):

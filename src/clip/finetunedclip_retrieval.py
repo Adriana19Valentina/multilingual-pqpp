@@ -92,7 +92,7 @@ lists = {
 
 relevance_labels = np.load(os.path.join(EMBED_DIR, "retrieval_labels.npz"))
 
-frames = {split: pd.read_csv(languages.split_path(split)) for split in SPLIT_FILES}
+frames = dict(languages.load_splits())
 
 masks = {}
 print("coverage:")

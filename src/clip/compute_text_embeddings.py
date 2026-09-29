@@ -49,8 +49,8 @@ print(f"{MODEL_NAME} / {PRETRAINED} on {device}")
 print(f"context length: {model.context_length}")
 
 frames = []
-for split_name, filename in SPLIT_FILES.items():
-    frame = pd.read_csv(os.path.join(HERE, filename))
+for split_name in SPLIT_FILES:
+    frame = languages.load_split(split_name)
     frame["split"] = split_name
     frames.append(frame)
 data = pd.concat(frames, ignore_index=True)
