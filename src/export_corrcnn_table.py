@@ -37,6 +37,23 @@ SETUP = {
     },
 }
 
+FT = f"xlmr-vitb32-ft-{languages.TARGET_LANGUAGE}"
+LONGCLIP_FT = f"longclip-b-ft-{languages.TARGET_LANGUAGE}"
+
+MATRIX_VARIANTS = [
+    ("longclip-b", "", "512x512 dims (original code)"),
+    ("longclip-b", "__imgmat", "4x4 images (as the paper says)"),
+    ("xlmr-vitb32", "", "512x512 dims"),
+    ("xlmr-vitb32", "__imgmat", "4x4 images"),
+    ("xlmr-vitb32", "__txtmat", "5x5, + pivot prompt"),
+    ("xlmr-vitb32", "__mlmat", "6x6, + pivot and target prompt"),
+    (FT, "", "512x512 dims"),
+    (FT, "__imgmat", "4x4 images"),
+    (LONGCLIP_FT, "", "512x512 dims"),
+    (LONGCLIP_FT, "__imgmat", "4x4 images"),
+]
+GEN_TARGETS = ["glide", "sdxl"]
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--decimal", default="comma", choices=["comma", "dot"])
 cli = parser.parse_args()
@@ -48,13 +65,13 @@ def load(*parts):
     with open(path) as handle:
         return json.load(handle)
 
-def run_for(target):
+def run_for(target, suffix="", encoder="longclip-b"):
     generative = target in ("glide", "sdxl")
     return load("corrcnn" if generative else "corrcnn_retrieval",
-                f"{target}__longclip-b.json")
+                f"{target}__{encoder}{suffix}.json")
 
-def cell(target, subset="total"):
-    run = run_for(target)
+def cell(target, subset="total", suffix="", encoder="longclip-b"):
+    run = run_for(target, suffix, encoder)
     return (run or {}).get("evaluation", {}).get(subset)
 
 def mark(p):
@@ -94,7 +111,7 @@ for target, _, _, _ in COLUMNS:
     row += f"{number(pearson):>8}‡{number(kendall):>8}‡"
 add(row)
 
-row = f"{'Rulat de noi':<32}"
+row = f"{'Our run':<32}"
 cells = {}
 for target, _, _, _ in COLUMNS:
     metrics = cell(target)
@@ -117,7 +134,7 @@ for target, _, _, _ in COLUMNS:
 add(delta)
 
 add("")
-add("Pe subseturi (Pearson):")
+add("By subset (Pearson):")
 add(f"  {'target':<12}{'total':<10}{'mscoco':<10}{'drawbench':<12}")
 for target, _, _, _ in COLUMNS:
     parts = [number(cell(target, s)["pearson"]) if cell(target, s) else "--"
@@ -136,6 +153,40 @@ add('on generation it is strongly degenerate (rank <= 3), while on retrieval it 
 add('better conditioned (rank <= 24).')
 
 add("")
+add("MATRIX VARIANTS (generation only)")
+add("")
+add('The original code correlates the DIMENSIONS of the embedding, although the')
+add('paper describes correlations between IMAGES. And neither uses the prompt,')
+add('even though CLIP offers the text-image similarity for free -- exactly the')
+add('signal that says how well the image matches the prompt.')
+add("")
+add(f"  {'encoder':<34}{'matrix':<34}" +
+    "".join(f"{target.upper():>22}" for target in GEN_TARGETS))
+add(f"  {'':<34}{'':<34}" +
+    "".join(f"{'Pearson':>11}{'Kendall':>11}" for _ in GEN_TARGETS))
+add("  " + "-" * 112)
+for encoder, suffix, description in MATRIX_VARIANTS:
+    row = f"  {encoder:<34}{description:<34}"
+    for target in GEN_TARGETS:
+        metrics = cell(target, suffix=suffix, encoder=encoder)
+        if metrics is None:
+            row += f"{'--':>11}{'--':>11}"
+        else:
+            row += (f"{number(metrics['pearson']):>10}{mark(metrics['pearson_p'])}"
+                    f"{number(metrics['kendall']):>10}{mark(metrics['kendall_p'])}")
+    add(row)
+add("")
+add('Differences checked with the Steiger test on the per-prompt predictions:')
+add('  text in the matrix (5x5 vs 4x4)   GLIDE +0.028 (p=1e-11)   SDXL +0.016 (p=1e-03)')
+add('  second language    (6x6 vs 5x5)   GLIDE +0.005 (p=0.015)   SDXL -0.000 (n.s.)')
+add("")
+add('Adding the prompt is a solid gain on both targets. The second language adds')
+add('something measurable only on GLIDE, and five times less -- but it is the first')
+add('variant in which the predictor is NOT blind to language, because it has a')
+add('textual input. Both require an encoder whose text and image embeddings live')
+add('in the same space, so xlmr-vitb32, not longclip-b.')
+
+add("")
 add('Limitation to report: the original code packs the two retrieval matrices')
 add('as [2, 512, 512] and uses the AVERAGED target, but the architecture')
 add('accepts a single channel, while Table 3 reports per system. The two cannot')
@@ -146,12 +197,12 @@ text_path = os.path.join(RESULTS_DIR, "correlation_cnn_table.txt")
 with open(text_path, "w") as handle:
     handle.write("\n".join(lines) + "\n")
 
-header = ["Rand"] + [f"{m} {ms} {s}" for _, m, ms, _ in COLUMNS
+header = ["Row"] + [f"{m} {ms} {s}" for _, m, ms, _ in COLUMNS
                      for s in ("Pearson", "Kendall")]
 tsv = [
     header,
     ["PQPP paper"] + [number(v) for target, _, _, _ in COLUMNS for v in PAPER[target]],
-    ["Rulat de noi"] + [
+    ["Our run"] + [
         number(cells[target][statistic]) if cells[target] else ""
         for target, _, _, _ in COLUMNS for statistic in ("pearson", "kendall")
     ],

@@ -430,7 +430,7 @@ for language in eval_languages:
 
     total = entry["total"]
     print(
-        f"\n=== test pe '{column}' ({language}, {setting}) ===\n"
+        f"\n=== test on '{column}' ({language}, {setting}) ===\n"
         f"  Pearson={total['pearson']:.3f} (p={total['pearson_p']:.2e})  "
         f"Kendall={total['kendall']:.3f} (p={total['kendall_p']:.2e})\n"
         f"  MSE={total['mse']:.5f}  R2={total['r2']:.4f}"

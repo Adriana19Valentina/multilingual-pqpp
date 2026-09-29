@@ -289,7 +289,7 @@ for language in LANGUAGES:
     }).to_csv(os.path.join(PREDICTIONS_DIR, f"{RUN}__on_{language}.csv"), index=False)
 
     total = entry["total"]
-    print(f"\n=== test pe {language} ({entry['setting']}) ===")
+    print(f"\n=== test on {language} ({entry['setting']}) ===")
     print(f"  Pearson={total['pearson']:.3f} (p={total['pearson_p']:.2e})  "
           f"Kendall={total['kendall']:.3f}  R2={total['r2']:.4f}")
     for source in test_prompts["source"].unique():

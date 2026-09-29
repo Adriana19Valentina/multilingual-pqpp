@@ -169,7 +169,7 @@ else:
 print('\n‡ p < 0.001   † p < 0.01   (against the random baseline)')
 
 if missing:
-    print(f"\nDe rulat ({len(missing)}):")
+    print(f"\nTo run ({len(missing)}):")
     for run in sorted(set(missing)):
         target, _, language = run.partition("__")
         note = " (incomplete grid -- rerun)" if "incompleta" in language else ""

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-28T08:32:30",
+  "generated": "2026-09-28T22:12:37",
   "predictor": "correlation CNN",
   "language_independent": true,
   "note": "does not use the prompt text; results are identical in any language",

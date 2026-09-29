@@ -45,7 +45,7 @@ if "-ft-" in TAG:
           f"{_ck['baseline_recall@1']:.3f} -> {_ck['recall@1']:.3f}")
 tokenizer = open_clip.get_tokenizer(MODEL_NAME)
 model.eval().to(device)
-print(f"{MODEL_NAME} / {PRETRAINED} pe {device}")
+print(f"{MODEL_NAME} / {PRETRAINED} on {device}")
 print(f"context length: {model.context_length}")
 
 frames = []
@@ -104,18 +104,26 @@ for language, column in LANGUAGE_COLUMNS.items():
     norms = np.linalg.norm(embeddings, axis=1)
     print(f"  {language:<20} {embeddings.shape}  mean norm {norms.mean():.2f}")
 
-pivot = arrays[f"text_{languages.PIVOT}"]
-english_unit = pivot / np.linalg.norm(pivot, axis=1, keepdims=True)
-print('\nalignment against the pivot (mean cosine, first 1000 prompts):')
+PIVOT_EMBEDDINGS = arrays[f"text_{languages.PIVOT}"]
+EMBED_DIM = int(PIVOT_EMBEDDINGS.shape[1])
+pivot_unit = PIVOT_EMBEDDINGS / np.linalg.norm(PIVOT_EMBEDDINGS, axis=1, keepdims=True)
+print('\nalignment against the pivot (mean cosine, first 1000 translated prompts):')
 for language in LANGUAGE_COLUMNS:
     if language == languages.PIVOT:
         continue
+    filled = np.flatnonzero(
+        data[LANGUAGE_COLUMNS[language]].fillna("").astype(str).str.strip() != "")[:1000]
+    if len(filled) < 2:
+        print(f"  {language:<20} no translated prompt to compare")
+        continue
     other = arrays[f"text_{language}"]
     other_unit = other / np.linalg.norm(other, axis=1, keepdims=True)
-    matched = (english_unit[:1000] * other_unit[:1000]).sum(-1).mean()
-    mismatched = (english_unit[:1000] @ other_unit[:1000].T)
-    mismatched = mismatched[~np.eye(1000, dtype=bool)].mean()
-    print(f"  {language:<20} perechi corecte {matched:.3f}   gresite {mismatched:.3f}")
+    left, right = pivot_unit[filled], other_unit[filled]
+    matched = (left * right).sum(-1).mean()
+    cross = left @ right.T
+    mismatched = cross[~np.eye(len(filled), dtype=bool)].mean()
+    print(f"  {language:<20} matching pairs {matched:.3f}   "
+          f"mismatched {mismatched:.3f}   over {len(filled)} prompts")
 
 npz_path = os.path.join(OUT_DIR, f"text_embeddings_{TAG}.npz")
 np.savez_compressed(npz_path, **arrays)
@@ -126,7 +134,7 @@ manifest = {
         "name": MODEL_NAME,
         "pretrained": PRETRAINED,
         "library": f"open_clip_torch {open_clip.__version__}",
-        "embed_dim": int(english.shape[1]),
+        "embed_dim": EMBED_DIM,
         "context_length": int(model.context_length),
         "normalized": False,
     },

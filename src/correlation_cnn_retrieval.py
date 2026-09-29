@@ -178,7 +178,7 @@ for subset, mask in [("total", np.ones(len(test_frame), bool)),
 total = entry["total"]
 print(f"\n=== test ===")
 print(f"  Pearson={total['pearson']:+.3f} (p={total['pearson_p']:.1e})  "
-      f"Kendall={total['kendall']:+.3f}   medii {total.get('mean_predicted', 0):.3f} "
+      f"Kendall={total['kendall']:+.3f}   means {total.get('mean_predicted', 0):.3f} "
       f"vs {total.get('mean_target', 0):.3f}")
 
 pd.DataFrame({

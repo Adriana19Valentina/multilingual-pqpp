@@ -75,7 +75,7 @@ for split in ["train", "val", "test"]:
 
 lists = {}
 report = {}
-print(f"\n{'split':<6} {'metric':<16} {'identic':>9} {'r':>8}   medii")
+print(f"\n{'split':<6} {'metric':<16} {'identical':>9} {'r':>8}   means")
 for split in ["train", "val", "test"]:
     queries_frame = pd.read_csv(
         os.path.join(ROOT, "dataset", "generative", "ground_truth", "average",

@@ -467,7 +467,7 @@ for language in eval_languages:
     del test_x
     torch.cuda.empty_cache()
     setting = 'in-language' if language == args.language else "transfer zero-shot"
-    print(f"\n=== test pe {language} ({setting}) ===")
+    print(f"\n=== test on {language} ({setting}) ===")
     per_language = {"setting": setting}
     for target, values in aggregated.items():
         entry = evaluate_target(target, values)

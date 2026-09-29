@@ -163,7 +163,7 @@ for split in SPLITS:
             "mean_published": float(expected.mean()),
         }
         print(f"  {split:<6} {name:<16} identic={exact:6.1%}  "
-              f"medii {computed.mean():.4f} vs {expected.mean():.4f}", flush=True)
+              f"means {computed.mean():.4f} vs {expected.mean():.4f}", flush=True)
 
 npz_path = os.path.join(OUT_DIR, f"{args.system}_english.npz")
 np.savez_compressed(npz_path, **arrays, corpus_image_ids=image_ids)

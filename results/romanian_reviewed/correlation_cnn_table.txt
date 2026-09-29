@@ -1,6 +1,6 @@
 ======================================================================================================================
 Correlation CNN -- post-generation / post-retrieval predictor
-generated: 2026-09-28 08:32
+generated: 2026-09-28 22:12
 ======================================================================================================================
 
 The input is a 512x512 correlation matrix between embedding dimensions,
@@ -18,10 +18,10 @@ one from the paper, the only one comparable with Table 3.
                                         generation        generation         retrieval         retrieval         retrieval         retrieval
 --------------------------------------------------------------------------------------------------------------------------------------------
 PQPP paper                         0.548‡   0.393‡   0.159‡   0.107‡   0.270‡   0.186‡   0.189‡   0.162‡   0.159‡   0.133‡   0.206‡   0.158‡
-Rulat de noi                       0.553‡   0.397‡   0.178‡   0.119‡   0.336‡   0.178‡   0.184‡   0.129‡   0.322‡   0.194‡   0.119‡   0.082‡
+Our run                            0.553‡   0.397‡   0.178‡   0.119‡   0.336‡   0.178‡   0.184‡   0.129‡   0.322‡   0.194‡   0.119‡   0.082‡
   ^ delta vs paper                  0.005    0.004    0.019    0.012    0.066   -0.008   -0.005   -0.033    0.163    0.061   -0.087   -0.076
 
-Pe subseturi (Pearson):
+By subset (Pearson):
   target      total     mscoco    drawbench   
   glide       0.553     0.559     0.399       
   sdxl        0.178     0.181     0.209       
@@ -38,6 +38,37 @@ The configuration differs between tasks, as it does in the original code:
 The image count matters: the matrix has rank at most (images - 1), so
 on generation it is strongly degenerate (rank <= 3), while on retrieval it is far
 better conditioned (rank <= 24).
+
+MATRIX VARIANTS (generation only)
+
+The original code correlates the DIMENSIONS of the embedding, although the
+paper describes correlations between IMAGES. And neither uses the prompt,
+even though CLIP offers the text-image similarity for free -- exactly the
+signal that says how well the image matches the prompt.
+
+  encoder                           matrix                                             GLIDE                  SDXL
+                                                                          Pearson    Kendall    Pearson    Kendall
+  ----------------------------------------------------------------------------------------------------------------
+  longclip-b                        512x512 dims (original code)           0.553‡     0.397‡     0.178‡     0.119‡
+  longclip-b                        4x4 images (as the paper says)         0.580‡     0.422‡     0.140‡     0.052†
+  xlmr-vitb32                       512x512 dims                           0.576‡     0.416‡     0.198‡     0.121‡
+  xlmr-vitb32                       4x4 images                             0.538‡     0.391‡     0.165‡     0.072‡
+  xlmr-vitb32                       5x5, + pivot prompt                    0.566‡     0.419‡     0.181‡     0.087‡
+  xlmr-vitb32                       6x6, + pivot and target prompt         0.572‡     0.423‡     0.180‡     0.080‡
+  xlmr-vitb32-ft-romanian_reviewed  512x512 dims                           0.566‡     0.406‡     0.205‡     0.126‡
+  xlmr-vitb32-ft-romanian_reviewed  4x4 images                             0.550‡     0.401‡     0.157‡     0.066‡
+  longclip-b-ft-romanian_reviewed   512x512 dims                           0.550‡     0.395‡     0.176‡     0.120‡
+  longclip-b-ft-romanian_reviewed   4x4 images                             0.587‡     0.430‡     0.156‡     0.064‡
+
+Differences checked with the Steiger test on the per-prompt predictions:
+  text in the matrix (5x5 vs 4x4)   GLIDE +0.028 (p=1e-11)   SDXL +0.016 (p=1e-03)
+  second language    (6x6 vs 5x5)   GLIDE +0.005 (p=0.015)   SDXL -0.000 (n.s.)
+
+Adding the prompt is a solid gain on both targets. The second language adds
+something measurable only on GLIDE, and five times less -- but it is the first
+variant in which the predictor is NOT blind to language, because it has a
+textual input. Both require an encoder whose text and image embeddings live
+in the same space, so xlmr-vitb32, not longclip-b.
 
 Limitation to report: the original code packs the two retrieval matrices
 as [2, 512, 512] and uses the AVERAGED target, but the architecture

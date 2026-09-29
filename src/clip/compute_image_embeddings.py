@@ -105,7 +105,7 @@ model, _, preprocess = open_clip.create_model_and_transforms(
     MODEL_NAME, pretrained=PRETRAINED
 )
 model.eval().to(device)
-print(f"{MODEL_NAME} / {PRETRAINED} pe {device}")
+print(f"{MODEL_NAME} / {PRETRAINED} on {device}")
 
 class ImageDataset(Dataset):
     def __init__(self, paths):

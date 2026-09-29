@@ -112,7 +112,7 @@ torch.cuda.empty_cache()
 print(f"pe GPU: {tuple(gpu_corpus.shape)} {gpu_corpus.dtype}", flush=True)
 
 lists, report = {}, {}
-print(f"\n{'split':<6} {'metric':<16} {'identic':>9} {'r':>8}   medii")
+print(f"\n{'split':<6} {'metric':<16} {'identical':>9} {'r':>8}   means")
 for split in ["train", "val", "test"]:
     queries_frame = query_frames[split]
     reference = pd.read_csv(
