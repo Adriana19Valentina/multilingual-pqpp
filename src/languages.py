@@ -6,37 +6,42 @@ import os
 
 # --- Romanian (already run; results in results/romanian_reviewed/) ---
 # TARGET_LANGUAGE = "romanian_reviewed"
-
+#
 # RAW_TARGET_LANGUAGE = "romanian"
-
+#
 # COLUMNS = {
 #     "english": "caption",
 #     "romanian": "caption_romanian",
 #     "romanian_reviewed": "caption_romanian_reviewed",
 # }
-
+#
 # LABELS = {
 #     "english": "English",
 #     "romanian": "Romanian (raw MT)",
 #     "romanian_reviewed": "Romanian (reviewed)",
 # }
+#
+# This is the one language with both a raw and a reviewed column.
 
 # --- French ---
 # TARGET_LANGUAGE = "french_reviewed"
 #
-# RAW_TARGET_LANGUAGE = "french"
+# RAW_TARGET_LANGUAGE = None
 #
 # COLUMNS = {
 #     "english": "caption",
-#     "french": "caption_french",
 #     "french_reviewed": "caption_french_reviewed",
 # }
 #
 # LABELS = {
 #     "english": "English",
-#     "french": "French (raw MT)",
 #     "french_reviewed": "French (reviewed)",
 # }
+#
+# If your file also has an unreviewed machine-translation column, add it:
+#     RAW_TARGET_LANGUAGE = "french"
+#     COLUMNS["french"] = "caption_french"
+#     LABELS["french"] = "French (raw MT)"
 
 # --- Italian ---
 TARGET_LANGUAGE = "italian_reviewed"
@@ -53,56 +58,70 @@ LABELS = {
     "italian_reviewed": "Italian (reviewed)",
 }
 
+# If your file also has an unreviewed machine-translation column, add it:
+#     RAW_TARGET_LANGUAGE = "italian"
+#     COLUMNS["italian"] = "caption_italian"
+#     LABELS["italian"] = "Italian (raw MT)"
+
 # --- Hindi ---
 # TARGET_LANGUAGE = "hindi_reviewed"
 #
-# RAW_TARGET_LANGUAGE = "hindi"
+# RAW_TARGET_LANGUAGE = None
 #
 # COLUMNS = {
 #     "english": "caption",
-#     "hindi": "caption_hindi",
 #     "hindi_reviewed": "caption_hindi_reviewed",
 # }
 #
 # LABELS = {
 #     "english": "English",
-#     "hindi": "Hindi (raw MT)",
 #     "hindi_reviewed": "Hindi (reviewed)",
 # }
+#
+# If your file also has an unreviewed machine-translation column, add it:
+#     RAW_TARGET_LANGUAGE = "hindi"
+#     COLUMNS["hindi"] = "caption_hindi"
+#     LABELS["hindi"] = "Hindi (raw MT)"
 
 # --- Danish ---
 # TARGET_LANGUAGE = "danish_reviewed"
 #
-# RAW_TARGET_LANGUAGE = "danish"
+# RAW_TARGET_LANGUAGE = None
 #
 # COLUMNS = {
 #     "english": "caption",
-#     "danish": "caption_danish",
 #     "danish_reviewed": "caption_danish_reviewed",
 # }
 #
 # LABELS = {
 #     "english": "English",
-#     "danish": "Danish (raw MT)",
 #     "danish_reviewed": "Danish (reviewed)",
 # }
+#
+# If your file also has an unreviewed machine-translation column, add it:
+#     RAW_TARGET_LANGUAGE = "danish"
+#     COLUMNS["danish"] = "caption_danish"
+#     LABELS["danish"] = "Danish (raw MT)"
 
 # --- Arabic ---
 # TARGET_LANGUAGE = "arabic_reviewed"
 #
-# RAW_TARGET_LANGUAGE = "arabic"
+# RAW_TARGET_LANGUAGE = None
 #
 # COLUMNS = {
 #     "english": "caption",
-#     "arabic": "caption_arabic",
 #     "arabic_reviewed": "caption_arabic_reviewed",
 # }
 #
 # LABELS = {
 #     "english": "English",
-#     "arabic": "Arabic (raw MT)",
 #     "arabic_reviewed": "Arabic (reviewed)",
 # }
+#
+# If your file also has an unreviewed machine-translation column, add it:
+#     RAW_TARGET_LANGUAGE = "arabic"
+#     COLUMNS["arabic"] = "caption_arabic"
+#     LABELS["arabic"] = "Arabic (raw MT)"
 
 PIVOT = "english"
 

@@ -136,40 +136,49 @@ The download is about 420 MB. Check what you already have with
 
 ## 2. Merge your translations
 
-You do **not** have to split your translations into train / validation / test.
-One file holding all 10,200 prompts is the normal case; the script works out
-which split each prompt belongs to.
+The translation files live here:
+
+<https://drive.google.com/drive/folders/174k389hDM8cno6PrAw59VlB999w65dKX>
+
+Download the one for your language and merge it:
 
 ```bash
-python src/add_translations.py path/to/italian.csv
-python src/add_translations.py path/to/italian.csv --write
+python src/add_translations.py path/to/final_reviewed_italian.csv
+python src/add_translations.py path/to/final_reviewed_italian.csv --write
 ```
 
 The first call only reports what it would do, the second writes. Several files or
 a glob also work: `python src/add_translations.py "translations/*.csv"`.
 
+You do **not** have to split the file into train / validation / test, or sort it,
+or keep any particular row order. The script matches each row to the prompt it
+belongs to and works out its split.
+
 **What the file needs.** The translation columns must be named
-`caption_<language>`, for example `caption_italian` and
-`caption_italian_reviewed`. For identifying the prompts, either is fine:
+`caption_<language>`, for example `caption_italian_reviewed`. For identifying the
+prompts, either is fine:
 
 - `caption_id` and `source` — preferred, exact
 - a `caption` column with the original English prompt — used automatically if
   the two above are absent, compared case- and whitespace-insensitively
 
-A `split` column is optional. If present it is checked against the published
-split and reported, then ignored: the splits come from this repository, not from
-your file. Values like `train_part1`, `train_part2`, `validation` or `dev` are
-recognised. A mismatch is reported as a warning, because results computed on a
-different split are comparable neither with Table 3 nor with the other
-languages.
+A `split` column is optional and is **not** used to define the splits: those come
+from this repository, and they are the ones the paper's numbers were computed on.
+If the column is present the script checks it against them and reports the
+agreement, for example `split column: 10200/10200 rows agree with the published
+split`. Values like `train_part1`, `train_part2`, `validation` or `dev` are
+recognised and normalised. A mismatch is reported as a warning, with a table of
+what moved where, because results computed on a different split are comparable
+neither with Table 3 nor with the other languages.
 
-Row order never matters. A prompt whose English text was edited will not match
-on a caption join; the script reports how many such rows it ignored.
+The script also checks the English captions, when your file carries them, and
+reports any row whose English text differs from ours even though the id matched —
+usually an editing artefact, harmless, but worth knowing about.
 
-**You do not need all 10,200 prompts.** Translate as many as you have; the
-script reports the count and carries on. The splits themselves stay fixed —
-6,080 train / 2,040 validation / 2,080 test — so do not reshuffle them, but a
-partly filled column is fine.
+**You do not need all 10,200 prompts.** Translate as many as you have; the script
+reports the count and carries on. Untranslated prompts are then dropped from
+every language alike, so the comparison stays row-for-row. Do not reshuffle the
+splits themselves — they stay 6,080 train / 2,040 validation / 2,080 test.
 
 ## 3. Configure `src/languages.py`
 
@@ -181,17 +190,15 @@ yours and comment out the rest. Italian is active by default:
 # --- Italian ---
 TARGET_LANGUAGE = "italian_reviewed"
 
-RAW_TARGET_LANGUAGE = "italian"
+RAW_TARGET_LANGUAGE = None
 
 COLUMNS = {
     "english": "caption",
-    "italian": "caption_italian",
     "italian_reviewed": "caption_italian_reviewed",
 }
 
 LABELS = {
     "english": "English",
-    "italian": "Italian (raw MT)",
     "italian_reviewed": "Italian (reviewed)",
 }
 ```
@@ -204,10 +211,14 @@ is the reviewed one. It also sets the results folder: everything is written to
 `results/italian_reviewed/`. To use a different folder name, set
 `RESULTS_SUBDIR` in the same file.
 
-`RAW_TARGET_LANGUAGE` is the unreviewed machine translation. It is evaluated but
-never trained on, and it adds one comparison row to the tables — that row is
-what shows whether human review of the translation matters. Set it to `None` if
-you do not have that column.
+`RAW_TARGET_LANGUAGE` is for the unreviewed machine translation, if your file has
+that column as well as the reviewed one. It is evaluated but never trained on, and
+it adds one comparison row to the tables, showing whether human review of the
+translation made a difference. Leave it `None` when you only have the reviewed
+column, as in the Italian file.
+
+Every language you declare in `COLUMNS` must be non-empty for a prompt to be
+used, so declare only the ones you report.
 
 Then check the configuration:
 
