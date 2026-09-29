@@ -132,7 +132,9 @@ for name, df in splits.items():
         else [LANGUAGE_COLUMNS[language] for language in eval_languages]
     )
     for column in needed:
-        assert column in df.columns, f"{name}: column {column} is missing; check COLUMNS in src/languages.py"
+        if column not in df.columns:
+            raise SystemExit(languages.missing_column_message(
+                column, args.language, df))
         assert df[column].notna().all(), f"{name}: missing values in {column}"
     df["normalized_target"] = normalize(df[TARGET_COLUMN])
     assert df["normalized_target"].between(0, 1).all(), f"{name}: target outside [0, 1]"

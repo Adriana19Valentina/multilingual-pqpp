@@ -1,10 +1,21 @@
+# Provenance only. This is how data/pqpp_multilingual_{train,val,test}.csv were
+# built in the first place: the PQPP ground truth joined onto our translated
+# prompt files. It needs the original PQPP dataset tree next to this repository
+# and is NOT part of the workflow in RUNNING.md -- to add a language, use
+# src/add_translations.py instead.
+
 import os
+import sys as _sys
 
 import pandas as pd
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+_sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import languages
+
+ROOT = os.path.abspath(os.path.join(languages.REPO, ".."))
 DATASET = os.path.join(ROOT, "dataset")
-OUT_DIR = os.path.dirname(os.path.abspath(__file__))
+SOURCE_DIR = os.path.join(DATASET, "..", "multilingual_pqpp", "dataset")
+OUT_DIR = languages.DATA_DIR
 
 TRANSLATED = {
     "train": "average_train_translated_part1_full.csv",
@@ -13,7 +24,9 @@ TRANSLATED = {
 }
 EXPECTED_SIZES = {"train": 6080, "val": 2040, "test": 2080}
 
-TRANSLATION_COLUMNS = ["caption_romanian", "caption_romanian_reviewed", "caption_french"]
+# Taken from whatever the translated source files carry, so this does not have
+# to be edited when a language is added or dropped.
+TRANSLATION_COLUMNS = None
 
 def key(series):
     return series.astype(str).str.strip()
@@ -40,8 +53,16 @@ def retrieval(model, split):
     )
 
 for split, filename in TRANSLATED.items():
-    base = pd.read_csv(os.path.join(OUT_DIR, filename))
+    base = pd.read_csv(os.path.join(SOURCE_DIR, filename))
     assert len(base) == EXPECTED_SIZES[split], f"{split}: {len(base)} rows"
+
+    present = [c for c in base.columns
+               if c.startswith("caption_") and c != "caption_id"]
+    if TRANSLATION_COLUMNS is None:
+        TRANSLATION_COLUMNS = present
+        print(f"translation columns: {TRANSLATION_COLUMNS}")
+    assert TRANSLATION_COLUMNS == present, (
+        f"{split}: translation columns {present} differ from {TRANSLATION_COLUMNS}")
 
     merged = base[["caption_id", "caption", "source"] + TRANSLATION_COLUMNS].copy()
     merged["_key"] = key(base["caption"])
@@ -53,7 +74,7 @@ for split, filename in TRANSLATED.items():
     )
 
     for table in sources:
-        assert table["_key"].is_unique, f"{split}: chei duplicate intr-o sursa"
+        assert table["_key"].is_unique, f"{split}: duplicate keys in a source table"
         before = len(merged)
         merged = merged.merge(table, on="_key", how="inner", validate="one_to_one")
         assert len(merged) == before, f"{split}: {before - len(merged)} prompts left unmatched"
@@ -78,7 +99,7 @@ for split, filename in TRANSLATED.items():
     for column in TRANSLATION_COLUMNS:
         assert merged[column].notna().all(), f"{split}: missing translations in {column}"
 
-    assert (merged.caption_id.values == base.caption_id.values).all(), f"{split}: ordine schimbata"
+    assert (merged.caption_id.values == base.caption_id.values).all(), f"{split}: row order changed"
     assert ((merged.hbpp_average - base.score).abs().max() < 1e-9), f"{split}: previous target differs"
 
     merged["score"] = merged["hbpp_average"]

@@ -171,16 +171,26 @@ def split_path(split):
     return os.path.join(DATA_DIR, SPLIT_FILES[split])
 
 
+def missing_column_message(column, language, frame):
+    present = [c for c in frame.columns if c.startswith("caption")]
+    return (
+        f"column '{column}', declared for language '{language}' in "
+        f"src/languages.py, is not in data/pqpp_multilingual_*.csv.\n"
+        f"  columns actually present: {present}\n"
+        f"  if you have not merged your translations yet, run:\n"
+        f"      python src/add_translations.py <your file>.csv --write\n"
+        f"  if they are merged under a different name, fix COLUMNS in "
+        f"src/languages.py to match the list above"
+    )
+
+
 def usable_mask(frame):
     import pandas as pd
 
     mask = pd.Series(True, index=frame.index)
     for language, column in COLUMNS.items():
         if column not in frame.columns:
-            raise KeyError(
-                f"column '{column}' for language '{language}' is missing from the "
-                f"CSV; check COLUMNS in src/languages.py"
-            )
+            raise SystemExit(missing_column_message(column, language, frame))
         text = frame[column]
         mask &= text.notna() & (text.astype(str).str.strip() != "")
     return mask.to_numpy()

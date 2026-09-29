@@ -93,7 +93,8 @@ arrays = {
 }
 
 for language, column in LANGUAGE_COLUMNS.items():
-    assert column in data.columns, f"column {column} is missing from the CSV; check COLUMNS in src/languages.py"
+    if column not in data.columns:
+        raise SystemExit(languages.missing_column_message(column, language, data))
     text = data[column].fillna("").astype(str)
     blank = int((text.str.strip() == "").sum())
     if blank:
