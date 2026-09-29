@@ -41,17 +41,15 @@ import os
 # --- Italian ---
 TARGET_LANGUAGE = "italian_reviewed"
 
-RAW_TARGET_LANGUAGE = "italian"
+RAW_TARGET_LANGUAGE = None
 
 COLUMNS = {
     "english": "caption",
-    "italian": "caption_italian",
     "italian_reviewed": "caption_italian_reviewed",
 }
 
 LABELS = {
     "english": "English",
-    "italian": "Italian (raw MT)",
     "italian_reviewed": "Italian (reviewed)",
 }
 

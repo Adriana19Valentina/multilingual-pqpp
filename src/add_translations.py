@@ -64,6 +64,42 @@ if duplicates:
     raise SystemExit(f"{duplicates} duplicate join keys across the inputs")
 
 splits = {s: pd.read_csv(languages.split_path(s)) for s in languages.SPLIT_FILES}
+
+SPLIT_ALIASES = {"train": "train", "training": "train",
+                 "val": "val", "valid": "val", "validation": "val", "dev": "val",
+                 "test": "test", "testing": "test", "eval": "test"}
+
+
+def normalise_split(value):
+    name = str(value).strip().lower().replace("-", "_")
+    if name in SPLIT_ALIASES:
+        return SPLIT_ALIASES[name]
+    head = name.split("_")[0]
+    return SPLIT_ALIASES.get(head, name)
+
+
+if "split" in merged.columns:
+    declared = merged["split"].map(normalise_split)
+    unknown = sorted(set(declared) - set(languages.SPLIT_FILES))
+    if unknown:
+        print(f"split column: unrecognised value(s) {unknown}; not checked")
+    else:
+        ours = pd.concat(
+            [frame[["caption_id", "source"]].assign(split_ours=name)
+             for name, frame in splits.items()], ignore_index=True)
+        check = merged[["caption_id", "source"]].assign(split_theirs=declared.to_numpy())
+        both = ours.merge(check, on=["caption_id", "source"], how="inner")
+        agree = int((both["split_ours"] == both["split_theirs"]).sum())
+        print(f"split column: {agree}/{len(both)} rows agree with the published split")
+        if agree < len(both):
+            print("  WARNING: the split in your file differs from the one published "
+                  "with PQPP. The published split is the one used here, and the one "
+                  "the paper's numbers come from; your column is ignored. Results "
+                  "computed on a different split are not comparable with Table 3 "
+                  "nor with the other languages.")
+            moved = both[both["split_ours"] != both["split_theirs"]]
+            print(pd.crosstab(moved["split_ours"], moved["split_theirs"]).to_string())
+
 known = set().union(*[set(f.columns) for f in splits.values()])
 
 if args.columns:

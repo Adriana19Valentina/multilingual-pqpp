@@ -156,6 +156,13 @@ a glob also work: `python src/add_translations.py "translations/*.csv"`.
 - a `caption` column with the original English prompt — used automatically if
   the two above are absent, compared case- and whitespace-insensitively
 
+A `split` column is optional. If present it is checked against the published
+split and reported, then ignored: the splits come from this repository, not from
+your file. Values like `train_part1`, `train_part2`, `validation` or `dev` are
+recognised. A mismatch is reported as a warning, because results computed on a
+different split are comparable neither with Table 3 nor with the other
+languages.
+
 Row order never matters. A prompt whose English text was edited will not match
 on a caption join; the script reports how many such rows it ignored.
 
