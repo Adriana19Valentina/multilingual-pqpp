@@ -109,8 +109,8 @@ Across languages they do not: if Italian evaluates on 1,627 test prompts and
 Romanian on 2,080, the two absolute Pearson values are not directly comparable.
 What is comparable is each language's own *retention* — its score divided by the
 English score from the same run, over the same prompts. Report that, and report
-the prompt count alongside every table. `export_results.py` writes it into the
-header and into `test_prompts_evaluated` in the JSON.
+the prompt count alongside every result: each evaluation in the result JSON
+carries it as `n`.
 
 Because every declared language shrinks the usable set, declare only the ones
 you actually report. If you have no reviewed/unreviewed distinction, set
@@ -320,30 +320,12 @@ beats the pretrained model, nothing is saved and the next steps fail on the
 missing file. It needs the MS COCO images in `data/images/`, and re-encoding the
 retrieved images needs the corpus in `data/all/`.
 
-## 7. Tables
+## 7. Results
 
-```bash
-python src/export_results.py
-python src/export_clip_table.py
-python src/export_corrcnn_table.py
-python src/export_retrieval_variants.py
-```
-
-Each writes `.txt`, `.tsv` and `.json` into `results/italian_reviewed/`. Add
-`--decimal dot` for an English locale.
-
-The tables carry one row per configuration:
-
-```
-English                  <- ignore, already published
-  pivot -> target        <- configuration 1, zero-shot transfer
-  pivot -> target (raw MT)
-Italian (reviewed)       <- configuration 2, in-language
-  target -> pivot
-```
-
-Cells you have not run appear as `--`. For BERT, the missing commands are listed
-explicitly at the end of the table.
+Every run writes one JSON into `results/<TARGET_LANGUAGE>/`, with the chosen
+hyperparameters and, under `evaluations`, the Pearson and Kendall correlations
+on the test split for every declared language (`total`, `mscoco` and
+`drawbench` subsets).
 
 ---
 
