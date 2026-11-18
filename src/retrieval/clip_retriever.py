@@ -1,18 +1,22 @@
 import argparse
 import os
+import sys
 
 import numpy as np
 import torch
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.REPO
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
+PQPP_DATASET = os.path.join(os.path.dirname(languages.REPO), "dataset")
+GT_DIR = os.path.join(PQPP_DATASET, "retrieval", "ground_truth")
 
 MODEL_ID = "openai/clip-vit-base-patch32"
 CORPUS_FILE = "corpus_embeddings_clip-vitb32-hf.npz"
-IMAGES_DIR = os.path.join(DATA_DIR, "all")
+IMAGES_DIR = languages.CORPUS_DIR
 
 class ClipRetriever:
 
@@ -110,7 +114,7 @@ def main():
 
     frame, reference = _split_prompts(args.split)
     prompts = [str(x) for x in frame["caption"]]
-    print(f"split={args.split}  query-uri={len(prompts)}  top_k={args.top_k}")
+    print(f"split={args.split}  queries={len(prompts)}  top_k={args.top_k}")
 
     depth = max(args.top_k, 2000) if args.validate else args.top_k
     ids = retriever.retrieve(prompts, depth)

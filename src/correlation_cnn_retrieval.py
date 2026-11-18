@@ -30,9 +30,19 @@ NUM_EPOCHS = 25
 BATCH_SIZE = 32
 SEED = 42
 
+BASE_ENCODERS = ["longclip-b", "xlmr-vitb32"]
+
+def check_encoder(name):
+    base, _, language = name.partition("-ft-")
+    if name in BASE_ENCODERS or (base in ("longclip-b", "xlmr-vitb32") and language in languages.COLUMNS):
+        return name
+    raise argparse.ArgumentTypeError(
+        f"'{name}': expected one of {BASE_ENCODERS} or <longclip-b|xlmr-vitb32>-ft-<language>, "
+        f"with <language> declared in src/languages.py ({languages.LANGUAGES})")
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--target", required=True, choices=sorted(TARGETS))
-parser.add_argument("--encoder", default="longclip-b", choices=["longclip-b", "xlmr-vitb32"])
+parser.add_argument("--encoder", default="longclip-b", type=check_encoder)
 args = parser.parse_args()
 
 SYSTEM, METRIC, TARGET_COLUMN = TARGETS[args.target]

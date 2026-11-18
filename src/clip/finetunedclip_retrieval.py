@@ -255,9 +255,9 @@ INIT = None
 if args.init_from:
     INIT = torch.load(args.init_from, map_location="cpu", weights_only=False)
     assert INIT["input_dim"] == INPUT_DIM, (
-        f"checkpointul are input_dim={INIT['input_dim']}, rularea curenta {INPUT_DIM}")
+        f"the checkpoint has input_dim={INIT['input_dim']}, the current run {INPUT_DIM}")
     print(f"initialised from {os.path.basename(args.init_from)} "
-          f"(antrenat pe {'+'.join(INIT['train_languages'])}), "
+          f"(trained on {'+'.join(INIT['train_languages'])}), "
           f"lr x{args.init_lr_scale:g}")
 
 def train_one_config(lr, decay):

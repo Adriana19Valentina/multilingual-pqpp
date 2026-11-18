@@ -55,7 +55,7 @@ def folder_for(caption_id, source):
         return os.path.join(MSCOCO_DIR, str(caption_id))
     if source == "drawbench":
         return os.path.join(DRAWBENCH_DIR, str(caption_id + DRAWBENCH_ID_OFFSET))
-    raise ValueError(f"sursa necunoscuta: {source}")
+    raise ValueError(f"unknown source: {source}")
 
 splits = {
     name: languages.load_split(name)

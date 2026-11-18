@@ -287,6 +287,39 @@ images, so its numbers are identical in every language. Run it anyway: it is the
 control that shows the drop in the other two predictors comes from the text and
 not from something else.
 
+## 6b. Correlation CNN with an encoder adapted to your language
+
+With a frozen encoder the CNN cannot see the language at all. This optional
+step gives the language a way in: Long-CLIP-B is fine-tuned on pairs of
+(caption in your language, MS COCO image), both towers, and the images the CNN
+reads are re-encoded with the adapted image tower. Only the image embeddings
+change; the retrieval lists and the targets stay the same.
+
+```bash
+L=$(python -c "import sys; sys.path.insert(0, 'src'); import languages; print(languages.TARGET_LANGUAGE)")
+
+python src/clip/finetune_clip_encoder.py --encoder longclip-b
+python src/clip/compute_image_embeddings_finetuned.py
+python src/clip/compute_retrieved_image_embeddings.py --encoder longclip-b-ft-$L
+
+python src/correlation_cnn_generative.py --target glide --embed-tag longclip-b-ft-$L
+python src/correlation_cnn_generative.py --target sdxl  --embed-tag longclip-b-ft-$L
+for T in clip_p10 clip_rr blip2_p10 blip2_rr; do
+    python src/correlation_cnn_retrieval.py --target $T --encoder longclip-b-ft-$L
+done
+```
+
+The commands are the same for every language: `L` is read from
+`TARGET_LANGUAGE` in `src/languages.py`, and the captions come from your
+translation file, like for the other predictors.
+
+Fine-tuning uses AdamW, learning rate 1e-6, weight decay 0.1, batch 64, 5 epochs,
+and keeps the epoch with the best caption-to-image recall@1 on validation. It
+writes `checkpoints/clip/clip_finetuned_<language>_longclip-b.pt`; if no epoch
+beats the pretrained model, nothing is saved and the next steps fail on the
+missing file. It needs the MS COCO images in `data/images/`, and re-encoding the
+retrieved images needs the corpus in `data/all/`.
+
 ## 7. Tables
 
 ```bash

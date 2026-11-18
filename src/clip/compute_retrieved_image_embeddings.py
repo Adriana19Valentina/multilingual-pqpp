@@ -16,17 +16,25 @@ HERE = languages.DATA_DIR
 EMBED_DIR = languages.EMBED_DIR
 IMAGES_DIR = languages.CORPUS_DIR
 
+BASE_ENCODERS = ["longclip-b", "xlmr-vitb32", "xlmr-vith14"]
+
+def check_encoder(name):
+    base, _, language = name.partition("-ft-")
+    if name in BASE_ENCODERS or (base in ("longclip-b", "xlmr-vitb32") and language in languages.COLUMNS):
+        return name
+    raise argparse.ArgumentTypeError(
+        f"'{name}': expected one of {BASE_ENCODERS} or <longclip-b|xlmr-vitb32>-ft-<language>, "
+        f"with <language> declared in src/languages.py ({languages.LANGUAGES})")
+
 parser = argparse.ArgumentParser()
-parser.add_argument("--encoder", required=True,
-                    choices=["longclip-b", "xlmr-vitb32", "xlmr-vith14",
-                             f"xlmr-vitb32-ft-{languages.TARGET_LANGUAGE}"])
+parser.add_argument("--encoder", required=True, type=check_encoder)
 parser.add_argument("--batch-size", type=int, default=128)
 parser.add_argument("--num-workers", type=int, default=12)
 args = parser.parse_args()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if args.encoder == "longclip-b":
+if args.encoder.startswith("longclip-b"):
     sys.path.insert(0, languages.THIRD_PARTY)
     from huggingface_hub import hf_hub_download
     from longclip_model import longclip
@@ -34,6 +42,14 @@ if args.encoder == "longclip-b":
     model, preprocess = longclip.load(
         hf_hub_download("BeichenZhang/LongCLIP-B", "longclip-B.pt"), device=device
     )
+    if "-ft-" in args.encoder:
+        _lang = args.encoder.split("-ft-")[1]
+        _ck = torch.load(os.path.join(languages.CHECKPOINT_ROOT, "clip",
+                                      f"clip_finetuned_{_lang}_longclip-b.pt"),
+                         map_location="cpu", weights_only=False)
+        model.float()
+        model.load_state_dict(_ck["model_state_dict"])
+        print(f"adapted weights: R@1 {_ck['baseline_recall@1']:.3f} -> {_ck['recall@1']:.3f}")
     model.eval()
     encode = model.encode_image
 else:
@@ -42,9 +58,7 @@ else:
     name, pretrained = {
         "xlmr-vitb32": ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
         "xlmr-vith14": ("xlm-roberta-large-ViT-H-14", "frozen_laion5b_s13b_b90k"),
-        f"xlmr-vitb32-ft-{languages.TARGET_LANGUAGE}":
-            ("xlm-roberta-base-ViT-B-32", "laion5b_s13b_b90k"),
-    }[args.encoder]
+    }[args.encoder.split("-ft-")[0]]
     model, _, preprocess = open_clip.create_model_and_transforms(name, pretrained=pretrained)
     if "-ft-" in args.encoder:
         _lang = args.encoder.split("-ft-")[1]

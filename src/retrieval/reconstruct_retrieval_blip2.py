@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import pickle
 import re
 
@@ -11,10 +12,13 @@ from lavis.models import load_model_and_preprocess
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-EMBED_DIR = os.path.join(HERE, "clip_embeddings")
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.REPO
+EMBED_DIR = languages.EMBED_DIR
+PQPP_DATASET = os.path.join(os.path.dirname(languages.REPO), "dataset")
+GT_DIR = os.path.join(PQPP_DATASET, "retrieval", "ground_truth")
 
 TOP_K = 25
 WIDE_K = 2000
@@ -29,13 +33,13 @@ model, vis_processors, txt_processors = load_model_and_preprocess(
     name="blip2_feature_extractor", model_type="pretrain_vitL",
     is_eval=True, device=device,
 )
-print("BLIP-2 pretrain_vitL incarcat", flush=True)
+print("BLIP-2 pretrain_vitL loaded", flush=True)
 
 with open(os.path.join(EMBED_DIR, "test2017_ids.txt")) as handle:
     test_ids = {int(line) for line in handle if line.strip()}
 entries = sorted(
-    (int(m.group(1)), os.path.join(HERE, "all", f))
-    for f in os.listdir(os.path.join(HERE, "all"))
+    (int(m.group(1)), os.path.join(languages.CORPUS_DIR, f))
+    for f in os.listdir(languages.CORPUS_DIR)
     if (m := re.match(r"0*(\d+)\.jpg$", f)) and int(m.group(1)) not in test_ids
 )
 image_ids = np.array([i for i, _ in entries], dtype=np.int64)
@@ -85,7 +89,7 @@ for split in ["train", "val", "test"]:
 query_frames, query_embeddings = {}, {}
 for split in ["train", "val", "test"]:
     frame = pd.read_csv(
-        os.path.join(ROOT, "dataset", "generative", "ground_truth", "average",
+        os.path.join(PQPP_DATASET, "generative", "ground_truth", "average",
                      f"average_{split}.csv")
     )
     captions = list(frame["caption"].astype(str))
@@ -109,7 +113,7 @@ for start in range(0, len(corpus), 8192):
     gpu_corpus[start : start + len(block)] = F.normalize(block.float(), dim=-1)
     del block
 torch.cuda.empty_cache()
-print(f"pe GPU: {tuple(gpu_corpus.shape)} {gpu_corpus.dtype}", flush=True)
+print(f"on GPU: {tuple(gpu_corpus.shape)} {gpu_corpus.dtype}", flush=True)
 
 lists, report = {}, {}
 print(f"\n{'split':<6} {'metric':<16} {'identical':>9} {'r':>8}   means")

@@ -10,12 +10,15 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "third_party"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.REPO
+sys.path.insert(0, languages.THIRD_PARTY)
 from longclip_model import longclip
 
-IMAGES_DIR = os.path.join(HERE, "all")
-OUT_DIR = os.path.join(HERE, "clip_embeddings")
+IMAGES_DIR = languages.CORPUS_DIR
+OUT_DIR = languages.EMBED_DIR
 TEST_IDS_FILE = os.path.join(OUT_DIR, "test2017_ids.txt")
 TAG = "longclip-l"
 HF_REPO, HF_FILE = "BeichenZhang/LongCLIP-L", "longclip-L.pt"

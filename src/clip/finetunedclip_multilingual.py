@@ -96,7 +96,7 @@ INPUT_DIM = 2 * EMBED_DIM
 
 LANGUAGES = [lang for lang in ALL_LANGUAGES if f"text_{lang}" in text_npz.files]
 assert args.language in LANGUAGES, (
-    f"embeddings-urile '{TAG}' do not contain language {args.language}; disponibile: {LANGUAGES}"
+    f"embeddings '{TAG}' do not contain language {args.language}; available: {LANGUAGES}"
 )
 text_features = {language: text_npz[f"text_{language}"] for language in LANGUAGES}
 

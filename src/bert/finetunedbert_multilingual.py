@@ -313,7 +313,7 @@ for lr in PARAM_GRID["learning_rate"]:
                 with open(marker) as handle:
                     config_best = json.load(handle)
                 print(
-                    f"  lr={lr:g} wd={decay:g} deja rulat -> se refoloseste "
+                    f"  lr={lr:g} wd={decay:g} already run -> reused "
                     f"(epoch {config_best['epoch']}, val_MSE={config_best['val_mse']:.5f})"
                 )
             else:

@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import pickle
 import re
 
@@ -10,10 +11,13 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from transformers import CLIPModel, CLIPProcessor
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-EMBED_DIR = os.path.join(HERE, "clip_embeddings")
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.REPO
+EMBED_DIR = languages.EMBED_DIR
+PQPP_DATASET = os.path.join(os.path.dirname(languages.REPO), "dataset")
+GT_DIR = os.path.join(PQPP_DATASET, "retrieval", "ground_truth")
 
 MODEL_ID = "openai/clip-vit-base-patch32"
 TOP_K = 25
@@ -30,13 +34,13 @@ image_processor = processor.image_processor
 with open(os.path.join(EMBED_DIR, "test2017_ids.txt")) as handle:
     test_ids = {int(line) for line in handle if line.strip()}
 entries = sorted(
-    (int(m.group(1)), os.path.join(HERE, "all", f))
-    for f in os.listdir(os.path.join(HERE, "all"))
+    (int(m.group(1)), os.path.join(languages.CORPUS_DIR, f))
+    for f in os.listdir(languages.CORPUS_DIR)
     if (m := re.match(r"0*(\d+)\.jpg$", f)) and int(m.group(1)) not in test_ids
 )
 image_ids = np.array([i for i, _ in entries], dtype=np.int64)
 paths = [p for _, p in entries]
-assert len(paths) == 118287, f"corpus neasteptat: {len(paths)}"
+assert len(paths) == 118287, f"unexpected corpus: {len(paths)}"
 print(f"corpus: {len(paths)} images (train2017)")
 
 class ImageDataset(Dataset):
@@ -78,7 +82,7 @@ report = {}
 print(f"\n{'split':<6} {'metric':<16} {'identical':>9} {'r':>8}   means")
 for split in ["train", "val", "test"]:
     queries_frame = pd.read_csv(
-        os.path.join(ROOT, "dataset", "generative", "ground_truth", "average",
+        os.path.join(PQPP_DATASET, "generative", "ground_truth", "average",
                      f"average_{split}.csv")
     )
     reference = pd.read_csv(
@@ -144,7 +148,7 @@ np.savez_compressed(out, **{f"{s}_top{TOP_K}": v for s, v in lists.items()},
                     **{f"{s}_ids": image_ids for s in ["corpus"]})
 with open(os.path.join(EMBED_DIR, "retrieval_lists_clip.manifest.json"), "w") as handle:
     json.dump(
-        {"model": MODEL_ID, "library": "transformers (preprocesare CLIPImageProcessor)",
+        {"model": MODEL_ID, "library": "transformers (CLIPImageProcessor preprocessing)",
          "corpus": "MS COCO train2017, 118287 images", "top_k": TOP_K,
          "validation": report, "overall_exact_match": overall,
          "note": 'the query embeddings in retrieval_process/clip/ are Long-CLIP-L and do NOT correspond to the benchmark'},

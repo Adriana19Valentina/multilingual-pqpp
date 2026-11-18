@@ -58,7 +58,7 @@ else:
 
     model, preprocess = longclip.load(
         hf_hub_download(MODEL_NAME, PRETRAINED), device=device)
-    tokenizer = longclip.tokenize
+    tokenizer = lambda texts: longclip.tokenize(texts, truncate=True)
 
     model.float()
 model.to(device)
@@ -67,7 +67,9 @@ print(f"encoder: {args.encoder} ({MODEL_NAME})")
 class PairDataset(Dataset):
 
     def __init__(self, split):
-        frame = pd.read_csv(os.path.join(DATA_DIR, f"pqpp_multilingual_{split}.csv"))
+        frame = languages.load_split(split)
+        if column not in frame.columns:
+            raise SystemExit(languages.missing_column_message(column, args.language, frame))
 
         frame = frame[frame["source"] == "mscoco"].reset_index(drop=True)
         self.texts = [str(x) for x in frame[column]]
@@ -120,7 +122,7 @@ def evaluate():
 
 baseline = evaluate()
 print(f"before fine-tuning: R@1={baseline['recall@1']:.3f} "
-      f"R@5={baseline['recall@5']:.3f} rang median={baseline['median_rank']:.0f}")
+      f"R@5={baseline['recall@5']:.3f} median rank={baseline['median_rank']:.0f}")
 
 optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 history = [{"epoch": 0, **baseline}]
@@ -144,7 +146,7 @@ for epoch in range(1, args.epochs + 1):
     metrics = evaluate()
     history.append({"epoch": epoch, "train_loss": total / steps, **metrics})
     print(f"epoch {epoch}  loss={total / steps:.4f}  R@1={metrics['recall@1']:.3f} "
-          f"R@5={metrics['recall@5']:.3f} rang median={metrics['median_rank']:.0f}", flush=True)
+          f"R@5={metrics['recall@5']:.3f} median rank={metrics['median_rank']:.0f}", flush=True)
     if metrics["recall@1"] > best["recall@1"]:
         best = {"recall@1": metrics["recall@1"], "epoch": epoch,
                 "state_dict": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}}
@@ -160,7 +162,7 @@ else:
                 "pretrained": PRETRAINED, "language": args.language,
                 "epoch": best["epoch"], "recall@1": best["recall@1"],
                 "baseline_recall@1": baseline["recall@1"], "args": vars(args)}, path)
-    print(f"\nsaved: {os.path.relpath(path, HERE)}  (epoch {best['epoch']}, "
+    print(f"\nsaved: {os.path.relpath(path, languages.REPO)}  (epoch {best['epoch']}, "
           f"R@1 {baseline['recall@1']:.3f} -> {best['recall@1']:.3f})")
 
 _suffix = "" if args.encoder == "xlmr-vitb32" else f"_{args.encoder}"

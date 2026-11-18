@@ -9,11 +9,14 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(HERE, "..", "dataset")
-EMBED_DIR = os.path.join(DATA_DIR, "clip_embeddings")
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-GT_DIR = os.path.join(ROOT, "dataset", "retrieval", "ground_truth")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import languages
+
+HERE = languages.REPO
+DATA_DIR = languages.DATA_DIR
+EMBED_DIR = languages.EMBED_DIR
+PQPP_DATASET = os.path.join(os.path.dirname(languages.REPO), "dataset")
+GT_DIR = os.path.join(PQPP_DATASET, "retrieval", "ground_truth")
 OUT_DIR = os.path.join(DATA_DIR, "retrieval_results")
 
 SPLITS = ["train", "val", "test"]
@@ -78,7 +81,7 @@ else:
         test_ids = {int(line) for line in handle if line.strip()}
     import re
     entries = sorted(
-        int(m.group(1)) for f in os.listdir(os.path.join(DATA_DIR, "all"))
+        int(m.group(1)) for f in os.listdir(languages.CORPUS_DIR)
         if (m := re.match(r"0*(\d+)\.jpg$", f)) and int(m.group(1)) not in test_ids
     )
     image_ids = np.array(entries, dtype=np.int64)
@@ -113,7 +116,7 @@ else:
                 scores.append(top.values.cpu().numpy())
         return np.concatenate(ids), np.concatenate(scores)
 
-print(f"sistem={args.system}  corpus={len(image_ids)} images", flush=True)
+print(f"system={args.system}  corpus={len(image_ids)} images", flush=True)
 
 arrays, score_rows, report = {}, [], {}
 for split in SPLITS:
@@ -162,7 +165,7 @@ for split in SPLITS:
             "mean_computed": float(computed.mean()),
             "mean_published": float(expected.mean()),
         }
-        print(f"  {split:<6} {name:<16} identic={exact:6.1%}  "
+        print(f"  {split:<6} {name:<16} identical={exact:6.1%}  "
               f"means {computed.mean():.4f} vs {expected.mean():.4f}", flush=True)
 
 npz_path = os.path.join(OUT_DIR, f"{args.system}_english.npz")
@@ -176,7 +179,7 @@ with open(os.path.join(OUT_DIR, f"{args.system}_english.manifest.json"), "w") as
         "system": args.system,
         "model": ("openai/clip-vit-base-patch32 through transformers"
                   if args.system == "clip"
-                  else "LAVIS blip2_feature_extractor / pretrain_vitL, spatiu 768"),
+                  else "LAVIS blip2_feature_extractor / pretrain_vitL, 768-d space"),
         "corpus": "MS COCO train2017, 118287 images",
         "prompts": 'all 10200, in the pivot language',
         "top_k_saved": args.top_k, "search_depth_for_rr": SEARCH_DEPTH,
