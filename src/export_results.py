@@ -38,7 +38,6 @@ ROW_SPECS = [spec for spec in [
     (PIVOT, TARGET, "  pivot -> target"),
     (PIVOT, RAW_TARGET, "  pivot -> target (raw MT)") if RAW_TARGET else None,
     (TARGET, TARGET, LANGUAGE_LABELS[TARGET]),
-    (TARGET, PIVOT, "  target -> pivot"),
 ] if spec]
 
 MAIN_COLUMNS = [
@@ -163,10 +162,6 @@ add('Multilingual PQPP -- pre-generation / pre-retrieval predictor (fine-tuned B
 add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 130)
 add("")
-add("The layout follows Table 3 of PQPP (arXiv 2406.04746v2, p. 8).")
-add("The baseline row is the paper's 'Fine-tuned BERT' row: bert-base-cased,")
-add("pivot language, the full 6080/2040/2080 split and the same targets.")
-add('Our runs use bert-base-multilingual-cased.')
 if TEST_N is not None and TEST_N != 2080:
     add("")
     add(f"NOTE: evaluated on {TEST_N} of the 2080 test prompts -- the rest are not")
@@ -223,15 +218,9 @@ for subset in SUBSETS:
         add('     do not describe MS COCO images, so the correlations are not interpretable.')
 
 add("")
-add("")
 add("=" * 130)
 add('CLIP PREDICTOR (post-generation) -- generation targets only')
 add("=" * 130)
-add('Long-CLIP from the paper is monolingual English (a 49,408-token BPE vocabulary,')
-add('without diacritics). Replaced with xlm-roberta-base-ViT-B-32 (LAION-5B),')
-add('which has a multilingual text tower and the same ViT-B/32 image tower.')
-add('CLIP stays frozen; only the 1024-512-256-1 MLP head is trained.')
-add('The baseline row is NOT directly comparable: the base model differs too.')
 add("")
 add(" " * 30 + "".join(f"{model + ' ' + measure:>18}"
                        for _, model, measure in MAIN_COLUMNS[:2]))
@@ -268,10 +257,7 @@ for target, model, measure in MAIN_COLUMNS[:2]:
                      f"{retained:<10.0%}")
     add("".join(cells))
 add("")
-add('Half of the CLIP input, the image embedding, does not depend on language,')
-add('so the predictor retains far more signal under translation than BERT does.')
 
-add("")
 add("")
 add("=" * 130)
 add('GENERATION SUMMARY -- all three predictors from Table 3')
@@ -280,7 +266,7 @@ add("")
 add(" " * 34 + f"{'GLIDE HBPP':>20}{'SDXL HBPP':>20}")
 add(" " * 34 + f"{'Pearson':>10}{'Kendall':>10}{'Pearson':>10}{'Kendall':>10}")
 add("-" * 74)
-add("PQPP paper (encodere originale)")
+add("PQPP paper (original encoders)")
 for label, baseline in [
     ("  Fine-tuned BERT", PAPER_BASELINE),
     ("  Fine-tuned CLIP", PAPER_BASELINE_CLIP),
@@ -292,7 +278,7 @@ for label, baseline in [
         row += f"{pearson:>10.3f}{kendall:>10.3f}"
     add(row)
 add("")
-add("Rulate de noi")
+add("Our runs")
 
 def generative_row(label, getter):
     row = f"{label:<34}"
@@ -329,28 +315,6 @@ generative_row("  CLIP (XLM-R), target lang.",
 add("")
 generative_row("  Correlation CNN (Long-CLIP)",
                lambda t: (load_corrcnn(t) or {}).get("evaluation", {}).get("total"))
-add("")
-add('Correlation CNN appears once: it does not use the prompt text, so')
-add('its result is the same in any language -- there is no transfer row.')
-add("")
-add('Sensitivity to translation, by the weight of text in the input (GLIDE):')
-add(f"  {'predictor':<22}{'input':<18}{'piv->piv':<10}{'piv->tgt':<10}{'kept':<9}")
-for label, source, transfer in [
-    ("BERT", lambda: stats(ALL_RUNS["bert"][("glide", PIVOT)], PIVOT, "total"),
-     lambda: stats(ALL_RUNS["bert"][("glide", PIVOT)], TARGET, "total")),
-    ("CLIP", lambda: stats(ALL_RUNS["clip"][("glide", PIVOT)], PIVOT, "total"),
-     lambda: stats(ALL_RUNS["clip"][("glide", PIVOT)], TARGET, "total")),
-    ("Correlation CNN", lambda: (load_corrcnn("glide") or {}).get("evaluation", {}).get("total"),
-     lambda: (load_corrcnn("glide") or {}).get("evaluation", {}).get("total")),
-]:
-    a, b = source(), transfer()
-    kind = {"BERT": 'text only', "CLIP": "text + imagine",
-            "Correlation CNN": 'image only'}[label]
-    if a is None or b is None:
-        add(f"  {label:<22}{kind:<18}--")
-        continue
-    add(f"  {label:<22}{kind:<18}{a['pearson']:<10.3f}{b['pearson']:<10.3f}"
-        f"{b['pearson'] / a['pearson']:<9.0%}")
 
 PAPER_ROWS = {
     "bert": ("Fine-tuned BERT", PAPER_BASELINE),
@@ -408,13 +372,9 @@ FULL_ROWS = [
 ]
 
 add("")
-add("")
 add("=" * 130)
 add("FULL TABLE 3 -- all predictors, both tasks, full subset")
 add("=" * 130)
-add("The Long-CLIP controls reproduce the encoder from the paper. Correlation CNN does not")
-add('receive the prompt text, so it has a single row: its numbers are')
-add('identical in any language.')
 add("")
 add(" " * 32 + "".join(f"{model + ' ' + measure:>18}" for _, model, measure in MAIN_COLUMNS))
 add(" " * 32 + "".join("  Pearson  Kendall" for _ in MAIN_COLUMNS))
@@ -442,23 +402,8 @@ for predictor, train_language, test_language, label in FULL_ROWS:
                     f"{metrics['kendall']:>8.3f}{mark(metrics['kendall_p'])}")
     add(row)
 add("")
-add('Sensitivity to translation, by the weight of text in the input:')
-add(f"  {'predictor':<20}{'input':<18}{'target':<12}{'piv->piv':<10}{'piv->tgt':<10}{'kept':<9}")
-for predictor, name, kind in [("bert", "mBERT", 'text only'),
-                              ("clip", "CLIP XLM-R", "text + imagine"),
-                              ("corrcnn", "Correlation CNN", 'image only')]:
-    for target in ["glide", "clip_p10", "blip2_p10"]:
-        source = cell(predictor, PIVOT, PIVOT, target)
-        transfer = cell(predictor, PIVOT, TARGET, target)
-        if source is None or transfer is None or not source.get("pearson"):
-            continue
-        add(f"  {name:<20}{kind:<18}{target:<12}{source['pearson']:<10.3f}"
-            f"{transfer['pearson']:<10.3f}{transfer['pearson'] / source['pearson']:<9.0%}")
-
-add("")
-add("")
 add("-" * 130)
-add("CORP LATEX (subset: total)")
+add("LATEX BODY (subset: total)")
 add("-" * 130)
 for train_language, test_language, label in ROW_SPECS:
     cells = []
@@ -474,7 +419,6 @@ for train_language, test_language, label in ROW_SPECS:
                 cells.append(f"{metrics[statistic]:.3f}{suffix}")
     add(f"{label.strip()} & " + " & ".join(cells) + r" \\")
 
-add("")
 add("")
 add("-" * 130)
 add('CROSS-LINGUAL TRANSFER (subset: total) -- row = training language, column = test language')
@@ -513,11 +457,9 @@ def predictions_for(target, train_language, test_language):
 transfer_tests = {}
 
 add("")
-add("")
 add("-" * 130)
 add('TRANSFER DEGRADATION: pivot in-language vs. pivot applied to the translation')
 add("-" * 130)
-add('Steiger test for dependent correlations (same test set, same labels).')
 add("")
 add(f"  {'target':<14}{'piv->piv':<10}{'piv->tgt':<13}{'kept':<10}{'z':<9}{'p':<11}")
 for target, model, measure in MAIN_COLUMNS:
@@ -544,20 +486,18 @@ for target, model, measure in MAIN_COLUMNS:
         "steiger_p": p,
     }
 add("")
-add('  A small p means the transfer loss is real, not sampling noise.')
 
-add("")
 add("")
 add("-" * 130)
 add('PROVENANCE')
 add("-" * 130)
-add(f"  {'run':<30}{'grid':<8}{'lr':<10}{'wd':<8}{'epoch':<8}{'val MSE':<12}{'precizie':<10}")
+add(f"  {'run':<30}{'grid':<8}{'lr':<10}{'wd':<8}{'epoch':<8}{'val MSE':<12}{'precision':<10}")
 for (target, language), run in sorted(RUNS.items()):
     if run is None:
-        add(f"  {target + '__' + language:<30}{'NERULAT':<8}")
+        add(f"  {target + '__' + language:<30}{'NOT RUN':<8}")
         continue
     best = run["best_config"]
-    grid = "9/9" if run["grid_complete"] else "incompleta"
+    grid = "9/9" if run["grid_complete"] else "incomplete"
     add(
         f"  {run['run']:<30}{grid:<8}{best['learning_rate']:<10g}"
         f"{best['weight_decay']:<8g}{best['epoch']:<8}{best['val_mse']:<12.5f}"
@@ -769,8 +709,8 @@ long_columns = [
     "predictor",
     "run", "train_language", "test_language", "setting", "target", "model",
     "measure", "task", "subset", "n", "pearson", "pearson_p", "kendall",
-    "kendall_p", "spearman", "r2", "rmse", "mae", "bias", "semnificatie",
-    "degenerat",
+    "kendall_p", "spearman", "r2", "rmse", "mae", "bias", "significance",
+    "degenerate",
 ]
 long_rows = [long_columns]
 

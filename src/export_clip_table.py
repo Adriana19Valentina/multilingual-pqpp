@@ -36,7 +36,6 @@ ROWS = [row for row in [
     ("xlmr", PIVOT, RAW_TARGET, "  pivot -> target (raw MT)") if RAW_TARGET else None,
     ("xlmr", PIVOT, TARGET, "  pivot -> target"),
     ("xlmr", TARGET, TARGET, "XLM-R, target language"),
-    ("xlmr", TARGET, PIVOT, "  target -> pivot"),
 ] if row]
 
 parser = argparse.ArgumentParser()
@@ -85,14 +84,6 @@ add("=" * 118)
 add('Fine-tuned CLIP -- post-generation / post-retrieval predictor')
 add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 118)
-add("")
-add('CLIP is frozen; only the 1024-512-256-1 MLP head is trained, over')
-add('[text(512) ; image(512)]. Training on a translation therefore means training')
-add('the head on translated embeddings, not adapting the encoder to that language.')
-add("")
-add('Generation: 4 images per prompt, predictions averaged. Retrieval: 25+25')
-add('images per query, binary classification, then aggregation into P@10 / RR.')
-add('The retrieval lists are reconstructed (the originals were never published).')
 add("")
 add('‡ p < 0.001   † p < 0.01   -- against the random baseline')
 add("")

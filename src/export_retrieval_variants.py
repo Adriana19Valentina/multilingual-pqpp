@@ -81,7 +81,7 @@ def cells(directory, name, language):
             run = json.load(handle)
     except json.JSONDecodeError:
 
-        return None, "json trunchiat"
+        return None, "truncated json"
     evaluations = run["evaluations"]
     node = evaluations.get(language) or evaluations
     return {t: node[t]["total"]["pearson"] for t in T if t in node}, None
@@ -92,10 +92,6 @@ add("=" * 92)
 add('Post-retrieval predictor: variants tested')
 add(f"generated: {datetime.now():%Y-%m-%d %H:%M}")
 add("=" * 92)
-add("")
-add('Encoder XLM-R ViT-B/32 (frozen unless stated otherwise). The retrieval')
-add('retrieval lists are reconstructed and validated against published targets.')
-add('pivot -> target means: trained on the pivot language, tested on the translation.')
 add("")
 add(f"{'variant':<38}" + "".join(f"{LABELS[t]:>13}" for t in T))
 add("-" * 92)

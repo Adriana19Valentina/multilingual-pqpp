@@ -140,7 +140,7 @@ if args.table == "main":
             print(delta)
 
     if args.latex:
-        print("\n% --- corp de tabel LaTeX ---")
+        print("\n% --- LaTeX table body ---")
         for label, cells in rows:
             print(f"{label} & " + " & ".join(cells) + r" \\")
 
@@ -172,7 +172,7 @@ if missing:
     print(f"\nTo run ({len(missing)}):")
     for run in sorted(set(missing)):
         target, _, language = run.partition("__")
-        note = " (incomplete grid -- rerun)" if "incompleta" in language else ""
+        note = " (incomplete grid -- rerun)" if "incomplete" in language else ""
         language = language.split(" ")[0]
         print(
             f"  python src/bert/finetunedbert_multilingual.py "
