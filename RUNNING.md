@@ -320,6 +320,70 @@ beats the pretrained model, nothing is saved and the next steps fail on the
 missing file. It needs the MS COCO images in `data/images/`, and re-encoding the
 retrieved images needs the corpus in `data/all/`.
 
+## 6c. Retrieval models adapted to your language
+
+Optional. Fine-tunes the text side of the three retrieval models, CLIP ViT-B/32,
+XLM-R ViT-B/32 (OpenCLIP) and BLIP-2 (Q-Former), on the target language and
+measures retrieval over MS COCO train2017 with the queries in that language. The
+image side always stays frozen, so the cached corpus embeddings stay valid.
+
+Two stages per model:
+
+- **distillation**: the text tower learns to map a caption in your language onto
+  the frozen model's embedding of the English caption. Only parallel captions
+  are used, no relevance judgement.
+- **contrastive**: starting from the distilled checkpoint, the text tower is
+  trained on the relevance judgements of the training split (InfoNCE against the
+  corpus, the English query in the same batch so English does not drift).
+
+```bash
+python src/retrieval/reconstruct_retrieval_clip.py
+python src/retrieval/reconstruct_retrieval_blip2.py
+python src/retrieval/retrieve_multilingual.py --system xlmr
+
+python src/retrieval/distil_clip_text_tower.py
+python src/retrieval/distil_xlmr_text_tower.py
+python src/retrieval/distil_blip2_text.py
+
+python src/retrieval/finetune_clip_contrastive.py
+python src/retrieval/finetune_xlmr_contrastive.py
+python src/retrieval/finetune_blip2_contrastive.py
+
+for S in clip xlmr blip2; do
+    for M in pretrained distilled contrastive; do
+        python src/retrieval/retrieve_multilingual.py --system $S --model $M
+    done
+    python src/retrieval/retrieve_multilingual.py --system $S --language english
+done
+python src/retrieval/retrieval_metrics.py
+```
+
+The first three commands build the corpus embeddings (skip the ones you already
+have; the XLM-R corpus is cached on its first retrieval run). The language is
+`TARGET_LANGUAGE` from `src/languages.py`; pass `--language` to override it.
+
+| Model | Stage | LR | Weight decay | Batch | Epochs |
+|---|---|---|---|---|---|
+| CLIP | distillation | 2e-5 | 0.1 | 128 | 10 |
+| XLM-R | distillation | 1e-5 | 0.1 | 128 | 5 |
+| BLIP-2 | distillation | 1e-4 | 0.01 | 96 | 12 |
+| CLIP | contrastive | 5e-6 | 0.1 | 48 | 6 |
+| XLM-R | contrastive | 5e-6 | 0.1 | 48 | 6 |
+| BLIP-2 | contrastive | 5e-5 | 0.01 | 16 | 6 (16,384 sampled negatives) |
+
+All use AdamW and keep the best epoch on validation (cosine to the English
+target for distillation, P@10 for contrastive). For Hindi we used 20 distillation
+and 15 contrastive epochs for XLM-R (`--epochs`). Only the text tower is trained
+for CLIP and XLM-R, and only the token and position embeddings of the Q-Former
+for BLIP-2, since the rest of the Q-Former is shared with the image path.
+
+Checkpoints go to `checkpoints/retrieval/`, the per-query lists to
+`data/clip_embeddings/retrieval_<system>_<language>.npz`, and the summaries and
+metrics (P@10, R@10/25, MRR, AP, nDCG, HR) to `results/<TARGET_LANGUAGE>/retrieval/`.
+The ground truth is read from `../dataset/retrieval/ground_truth/` of the PQPP
+repository. Retrieval needs the corpus in `data/all/`; BLIP-2 retrieval keeps the
+whole corpus on the GPU (about 12 GB).
+
 ## 7. Results
 
 Every run writes one JSON into `results/<TARGET_LANGUAGE>/`, with the chosen
